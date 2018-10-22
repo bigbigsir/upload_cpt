@@ -9,29 +9,31 @@
     <script src="js/index.js"></script>
     <link rel="stylesheet" href="css/base.css">
     <style>
-        .box {
-            width: 500px;
-            height: 500px;
+        html, body {
+            height: 100%;
+        }
+
+        .upload-frame {
+            /*position: absolute;*/
+            /*top: -1000px;*/
+            /*left: -1000px;*/
+            /*overflow: hidden;*/
+            /*height: 1px;*/
+            /*opacity: 0;*/
+            /*filter: alpha(opacity=0);*/
             border: 1px solid red;
         }
+
+        .upload-form {
+            border: 1px solid black;
+        }
+
+
     </style>
 </head>
 <body>
-<!--<input id="file" name="file" multiple type="file">-->
-<button id="btn">提交</button>
-<iframe src="" name="iframe1" style="width: 300px;height: 300px;border: 1px solid red" frameborder="0">
-
-</iframe>
-<form id="fileForm" action="http://localhost:3000/upload" target="iframe1" enctype="multipart/form-data" method="post">
-    <input name="code" type="text">
-    <input id="file" name="file" multiple type="file">
-    <button>提交</button>
-</form>
-<div id="container1" class="box">
-
-</div>
-<span id="container2">
-
-</span>
+<p>前面</p>
+<input type="file" id="test" name="file" class="test">
+<p>后面</p>
 </body>
 </html>
