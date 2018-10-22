@@ -28,12 +28,44 @@
             border: 1px solid black;
         }
 
+        .el-button {
+            display: inline-block;
+            line-height: 1;
+            white-space: nowrap;
+            cursor: pointer;
+            background: #fff;
+            border: 1px solid #dcdfe6;
+            color: #606266;
+            -webkit-appearance: none;
+            text-align: center;
+            box-sizing: border-box;
+            outline: none;
+            margin: 0;
+            transition: .1s;
+            font-weight: 500;
+            -moz-user-select: none;
+            -webkit-user-select: none;
+            -ms-user-select: none;
+            padding: 12px 20px;
+            font-size: 14px;
+            border-radius: 4px;
+        }
 
+        .el-button:focus,
+        .el-button:hover {
+            color: #409eff;
+            border-color: #c6e2ff;
+            background-color: #ecf5ff;
+        }
     </style>
 </head>
 <body>
-<p>前面</p>
+<p>=======================================</p>
 <input type="file" id="test" name="file" class="test">
-<p>后面</p>
+<p>=======================================</p>
+
+<!--<button type="button" class="el-button">-->
+    <!--<span>默认按钮</span>-->
+<!--</button>-->
 </body>
 </html>
