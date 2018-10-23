@@ -25,6 +25,7 @@
         }
 
         .upload-form {
+            display: none;
             border: 1px solid black;
         }
 
@@ -60,12 +61,17 @@
     </style>
 </head>
 <body>
+<button id="disabled" type="button" class="el-button">
+    <span>禁用上传</span>
+</button>
+<button id="enabled" type="button" class="el-button">
+    <span>启用上传</span>
+</button>
+<button id="manual" type="button" class="el-button">
+    <span>手动上传</span>
+</button>
 <p>=======================================</p>
-<input type="file" id="test" name="file" class="test">
+<input type="file" id="test" name="file" multiple="multiple" class="test">
 <p>=======================================</p>
-
-<!--<button type="button" class="el-button">-->
-    <!--<span>默认按钮</span>-->
-<!--</button>-->
 </body>
 </html>

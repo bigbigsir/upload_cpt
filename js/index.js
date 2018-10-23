@@ -21,6 +21,8 @@ function ajax(config) {
     }
 }
 
+var _id = Math.random();
+
 // 在目标元素后插入元素
 function insertAfter(newElement, targetElement) {
     var parent = targetElement.parentNode;
@@ -31,82 +33,123 @@ function insertAfter(newElement, targetElement) {
     }
 }
 
-// 创建iframe元素
-function createUploadIframe(id, config) {
-    var frameId = "uploadIframe" + id;
-    var iframe = document.createElement("iframe");
-    iframe.id = iframe.name = frameId;
-    iframe.className = "upload-frame";
-    document.body.appendChild(iframe);
-    bindEvent(iframe, "load", function () {
-        var iframe = this;
+// 创建iFrame元素
+function createUploadIFrame(config) {
+    var frameId = "uploadIFrame" + _id;
+    var iFrame = document.createElement("iFrame");
+    iFrame.id = iFrame.name = frameId;
+    iFrame.className = "upload-frame";
+    document.body.appendChild(iFrame);
+    bindEvent(iFrame, "load", function () {
         var responseText;
-        var document = iframe.contentWindow || iframe.contentDocument;
+        var document = iFrame.contentWindow || iFrame.contentDocument;
         responseText = document.document.body ? document.document.body.innerText : null;
         if (responseText && config.success) {
             config.success(JSON.parse(responseText));
         }
     });
-    return iframe;
+    return iFrame;
 }
 
 // 创建form元素
-function createUploadForm(id, fileInput, config) {
-    var formId = "uploadForm" + id;
+function createUploadForm(config) {
+    var formId = "uploadForm" + _id;
     var form = document.createElement("form");
+    var uploadFile = createUploadFile(config);
     form.id = form.name = formId;
-    form.target = "uploadIframe" + id;
-    form.method = "POST";
     form.action = config.url;
+    form.method = "POST";
+    form.target = "uploadIFrame" + _id;
     form.enctype = "multipart/form-data";
     form.className = "upload-form";
-    form.appendChild(fileInput);
+    form.appendChild(uploadFile);
     document.body.appendChild(form);
     return form;
 }
 
-function createFileInput(id, config) {
-    var inputId = "uploadFile" + id;
+// 创建fileInput元素
+function createUploadFile(config) {
+    var inputId = "uploadFile" + _id;
     var oldInput = document.getElementById(config.fileInputId);
     var newInput = oldInput.cloneNode();
-    var span = document.createElement("span");
-    var button = document.createElement("button");
-    span.innerText = config.btnText;
-    button.setAttribute("type", "button");
-    button.className = "el-button";
-    button.appendChild(span);
-    oldInput.removeAttribute("name");
-    oldInput.style.display = "none";
     newInput.id = inputId;
-    bindEvent(button, "click", function () {
-        newInput.click();
-    });
+    oldInput.style.display = "none";
+    oldInput.removeAttribute("name");
     bindEvent(newInput, "change", function () {
-        var form;
+        if (!newInput.value || !limitImgMaxSize(newInput)) return false;
         if (config.autoUpload) {
-            form = document.getElementById("uploadForm" + id);
-            form.submit();
+            var uploadForm = document.getElementById("uploadForm" + _id);
+            if (!config.uploadBefore) {
+                uploadForm.submit();
+            } else if (config.uploadBefore(newInput)) {
+                uploadForm.submit();
+            }
         }
     });
-    insertAfter(button, oldInput);
     return newInput;
 }
 
+// 创建上传按钮
+function createButton(config) {
+    var oldInput = document.getElementById(config.fileInputId);
+    var button = document.createElement("button");
+    var span = document.createElement("span");
+    span.innerText = config.btnText;
+    button.id = "uploadButton" + _id;
+    button.setAttribute("type", "button");
+    button.className = "el-button";
+    button.appendChild(span);
+    insertAfter(button, oldInput);
+    bindEvent(button, "click", function () {
+        var uploadFile = document.getElementById("uploadFile" + _id);
+        uploadFile.click();
+    });
+    return button;
+}
+
+// 验证图片大小是否超过5M
+function limitImgMaxSize(file) {
+    var i, len;
+    var maxSize = 5 * 1024 * 1024;
+    if (file.files) {
+        for (i = 0, len = file.files.length; i < len; i++) {
+            if (~file.files[i].type.indexOf("image/") && file.files[i].size > maxSize) {
+                return alert("图片大小需小于5M！");
+            }
+        }
+    }
+    else {
+        var suffixIndex, suffix;
+        var paths = file.value.split(",");
+        var img = document.createElement("image");
+        for (i = 0, len = paths.length; i < len; i++) {
+            img.src = paths[i];
+            suffixIndex = paths[i].lastIndexOf(".");
+            suffix = paths[i].substring(suffixIndex + 1).toUpperCase();
+            if (/^(BMP|JPEG|GIF|JPG|PNG)$/.test(suffix) && img.fileSize > maxSize) {
+                return alert("图片大小需小于5M！");
+            }
+        }
+    }
+    return true;
+}
+
 // 添加其他表单参数
-function addOtherRequestsToForm(form, data) {
+function addOtherRequestsToForm(data) {
     var cloneElement;
     var originalElement = document.createElement("input");
+    var uploadForm = document.getElementById("uploadForm" + _id);
     originalElement.type = "hidden";
     for (var key in data) {
         cloneElement = originalElement.cloneNode();
         cloneElement.name = key;
         cloneElement.value = data[key];
-        form.appendChild(cloneElement);
+        uploadForm.appendChild(cloneElement);
     }
-    return form;
+    return uploadForm;
 }
 
-// 绑定时间方法
+// 事件绑定方法
 function bindEvent(target, event, cb) {
     if (target.addEventListener) {
         target.addEventListener(event, cb, false)
@@ -119,29 +162,65 @@ function bindEvent(target, event, cb) {
     }
 }
 
+// 提交表单
+function submit() {
+    var uploadForm = document.getElementById("uploadForm" + _id);
+    var uploadFile = document.getElementById("uploadFile" + _id);
+    if (!uploadFile.value || !limitImgMaxSize(uploadFile)) return false;
+    uploadForm.submit();
+}
+
+// 启用上传
+function disabled() {
+    var button = document.getElementById("uploadButton" + _id);
+    button.setAttribute("disabled", "disabled");
+}
+
+// 禁用上传
+function enabled() {
+    var button = document.getElementById("uploadButton" + _id);
+    button.removeAttribute("disabled");
+}
+
 function init(config) {
-    var random = Math.random();
-    var iframe = createUploadIframe(random, config);
-    var fileInput = createFileInput(random, config);
-    var form = createUploadForm(random, fileInput, config);
-    if (config.data) addOtherRequestsToForm(form, config.data);
+    var iframe = createUploadIFrame(config);
+    var form = createUploadForm(config);
+    var button = createButton(config);
+    if (config.data) addOtherRequestsToForm(config.data);
+    return {
+        submit: submit,
+        disabled: disabled,
+        enabled: enabled
+    }
 }
 
 
 $(function () {
-    init({
+    var upload = init({
         url: "http://localhost:3000/upload",
-        btnText: "上传",
+        btnText: "上传文件",
         preview: false,
-        multiple: false,
         autoUpload: true,
         fileInputId: "test",
         data: {
             code: 123,
             name: "主升浪"
         },
+        uploadBefore: function (file) {
+            console.log(file);
+            return true;
+        },
         success: function (data) {
             console.log(data);
         }
+    });
+    $("#manual").on("click", function () {
+        upload.submit();
+    });
+    $("#disabled").on("click", function () {
+        upload.disabled();
+    });
+    $("#enabled").on("click", function () {
+        upload.enabled();
     })
 });
