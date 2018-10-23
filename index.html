@@ -29,6 +29,66 @@
             border: 1px solid black;
         }
 
+        .el-upload {
+            display: inline-block;
+            text-align: center;
+            cursor: pointer;
+            outline: none;
+        }
+
+        .el-upload--picture-card {
+            box-sizing: border-box;
+            width: 148px;
+            height: 148px;
+            border: 1px dashed #c0ccda;
+            border-radius: 6px;
+            cursor: pointer;
+            vertical-align: top;
+            background-color: #fbfdff;
+        }
+
+        .el-upload--picture-card:hover,
+        .el-upload:focus {
+            border-color: #409eff;
+        }
+
+        .el-upload--picture-card div {
+            margin-top: 50%;
+            -webkit-transform: translateY(-50%);
+            -moz-transform: translateY(-50%);
+            -ms-transform: translateY(-50%);
+            -o-transform: translateY(-50%);
+            transform: translateY(-50%);
+        }
+
+        .el-upload--picture-card i {
+            font-size: 28px;
+            color: #8c939d;
+        }
+
+        .el-upload--picture-card i:after {
+            content: "+";
+        }
+
+        .el-upload--picture-card p {
+            color: #8c939d;
+            line-height: 1.5;
+        }
+
+        [class*=" el-icon-"], [class^=el-icon-] {
+            font-family: element-icons !important;
+            speak: none;
+            font-style: normal;
+            font-weight: 400;
+            font-variant: normal;
+            text-transform: none;
+            line-height: 1;
+            vertical-align: baseline;
+            display: inline-block;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+
         .el-button {
             display: inline-block;
             line-height: 1;
@@ -52,6 +112,12 @@
             border-radius: 4px;
         }
 
+        .el-button-small {
+            padding: 9px 15px;
+            font-size: 12px;
+            border-radius: 3px;
+        }
+
         .el-button:focus,
         .el-button:hover {
             color: #409eff;
@@ -61,17 +127,23 @@
     </style>
 </head>
 <body>
-<button id="disabled" type="button" class="el-button">
+<button id="disabled" type="button" class="el-button el-button-small">
     <span>禁用上传</span>
 </button>
-<button id="enabled" type="button" class="el-button">
+<button id="enabled" type="button" class="el-button el-button-small">
     <span>启用上传</span>
 </button>
-<button id="manual" type="button" class="el-button">
+<button id="manual" type="button" class="el-button el-button-small">
     <span>手动上传</span>
 </button>
 <p>=======================================</p>
-<input type="file" id="test" name="file" multiple="multiple" class="test">
+<input type="file" id="file" name="file" multiple="multiple" class="test">
 <p>=======================================</p>
+<div class="el-upload el-upload--picture-card">
+    <div>
+        <i class="el-icon-plus"></i>
+        <p>上传图片</p>
+    </div>
+</div>
 </body>
 </html>

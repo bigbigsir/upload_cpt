@@ -92,19 +92,37 @@ function createUploadFile(config) {
 // 创建上传按钮
 function createButton(config) {
     var oldInput = document.getElementById(config.fileInputId);
-    var button = document.createElement("button");
-    var span = document.createElement("span");
-    span.innerText = config.btnText;
-    button.id = "uploadButton" + _id;
-    button.setAttribute("type", "button");
-    button.className = "el-button";
-    button.appendChild(span);
-    insertAfter(button, oldInput);
-    bindEvent(button, "click", function () {
-        var uploadFile = document.getElementById("uploadFile" + _id);
-        uploadFile.click();
-    });
-    return button;
+    if (config.onlyUploadImg) {
+        var uploadCard = document.createElement("div");
+        var div = document.createElement("div");
+        var i = document.createElement("i");
+        var p = document.createElement("p");
+        uploadCard.className = "el-upload el-upload--picture-card";
+        i.className = "el-icon-plus";
+        p.innerText = "上传图片";
+        div.appendChild(i);
+        div.appendChild(p);
+        uploadCard.appendChild(div);
+        insertAfter(uploadCard, oldInput);
+        bindEvent(uploadCard, "click", function () {
+            var uploadFile = document.getElementById("uploadFile" + _id);
+            uploadFile.click();
+        });
+    } else {
+        var button = document.createElement("button");
+        var span = document.createElement("span");
+        span.innerText = config.buttonText;
+        button.id = "uploadButton" + _id;
+        button.setAttribute("type", "button");
+        button.className = "el-button el-button-small";
+        button.appendChild(span);
+        insertAfter(button, oldInput);
+        bindEvent(button, "click", function () {
+            var uploadFile = document.getElementById("uploadFile" + _id);
+            uploadFile.click();
+        });
+        return button;
+    }
 }
 
 // 验证图片大小是否超过5M
@@ -183,6 +201,10 @@ function enabled() {
 }
 
 function init(config) {
+    config = config || {};
+    config.autoUpload = config.autoUpload || true;
+    config.buttonText = config.buttonText || "上传附件";
+    if (!config.url || !config.fileInputId) throw "url or fileInputId is not defined";
     var iframe = createUploadIFrame(config);
     var form = createUploadForm(config);
     var button = createButton(config);
@@ -197,11 +219,12 @@ function init(config) {
 
 $(function () {
     var upload = init({
-        url: "http://localhost:3000/upload",
-        btnText: "上传文件",
-        preview: false,
-        autoUpload: true,
-        fileInputId: "test",
+        fileInputId: "file",
+        url: "http://localhost:30010/upload",
+        onlyUploadImg: true,
+        // buttonText: "上传文件",
+        // preview: false,
+        // autoUpload: true,
         data: {
             code: 123,
             name: "主升浪"
@@ -224,3 +247,35 @@ $(function () {
         upload.enabled();
     })
 });
+
+function getBrowserInfo() {
+    var agent = navigator.userAgent.toLowerCase();
+    var regStr_ie = /msie [\d.]+;/gi;
+    var regStr_ff = /firefox\/[\d.]+/gi;
+    var regStr_chrome = /chrome\/[\d.]+/gi;
+    var regStr_saf = /safari\/[\d.]+/gi;
+    // IE
+    if (agent.indexOf("msie") > 0) {
+        return agent.match(regStr_ie);
+    }
+
+    // FireFox
+    if (agent.indexOf("firefox") > 0) {
+        return agent.match(regStr_ff);
+    }
+
+    // Chrome
+    if (agent.indexOf("chrome") > 0) {
+        return agent.match(regStr_chrome);
+    }
+
+    // Safari
+    if (agent.indexOf("safari") > 0 && agent.indexOf("chrome") < 0) {
+        return agent.match(regStr_saf);
+    }
+}
+
+// var browser = getBrowserInfo() ;
+// console.log(browser);
+// var verinfo = (browser+"").replace(/[^0-9.]/ig,"");
+// console.log(verinfo);
