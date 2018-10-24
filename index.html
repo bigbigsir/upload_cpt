@@ -37,6 +37,7 @@
         }
 
         .el-upload--picture-card {
+            overflow: hidden;
             box-sizing: border-box;
             width: 148px;
             height: 148px;
@@ -45,6 +46,12 @@
             cursor: pointer;
             vertical-align: top;
             background-color: #fbfdff;
+        }
+
+        .el-upload--picture-card img {
+            width: 100%;
+            height: 100%;
+            display: block;
         }
 
         .el-upload--picture-card:hover,
@@ -138,6 +145,7 @@
 </button>
 <p>=======================================</p>
 <input id="file" name="file" type="file">
+
 <p>=======================================</p>
 <div class="el-upload el-upload--picture-card">
     <div>
