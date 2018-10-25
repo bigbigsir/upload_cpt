@@ -66,7 +66,7 @@ function createUploadIFrame(config) {
     var frameId = "uploadIFrame" + _id;
     var iFrame = document.createElement("iFrame");
     iFrame.id = iFrame.name = frameId;
-    iFrame.className = "upload-frame";
+    iFrame.className = "ty-upload-iframe";
     document.body.appendChild(iFrame);
     addEvent(iFrame, "load", function () {
         var responseText;
@@ -85,7 +85,7 @@ function createUploadForm(config) {
     var submitButtonId = "submitButton" + _id;
     var form = document.createElement("form");
     var submitButton = document.createElement("input");
-    var uploadFile = createUploadFile(config);
+    var fileInput = createFileInput(config);
     submitButton.type = "submit";
     submitButton.id = submitButtonId;
     form.id = form.name = formId;
@@ -93,21 +93,21 @@ function createUploadForm(config) {
     form.method = "POST";
     form.target = "uploadIFrame" + _id;
     form.enctype = "multipart/form-data";
-    form.className = "upload-form";
-    form.appendChild(uploadFile);
+    form.className = "ty-upload-form";
+    form.appendChild(fileInput);
     form.appendChild(submitButton);
     document.body.appendChild(form);
     addEvent(form, "submit", function (e) {
-        if (uploadFile.value) {
-            if (!limitImgMaxSize(uploadFile)) {
+        if (fileInput.value) {
+            if (!limitImgMaxSize(fileInput)) {
                 alert("上传图片的大小不能超过5M！");
                 return !!(e.preventDefault && e.preventDefault());
             }
-            if (config.onlyUploadImg && !isImg(uploadFile)) {
+            if (config.uploadType === "avatar" && !isImg(fileInput)) {
                 alert("请上传图片格式文件！");
                 return !!(e.preventDefault && e.preventDefault());
             }
-            if (config.beforeUpload && !config.beforeUpload(uploadFile)) {
+            if (config.beforeUpload && !config.beforeUpload(fileInput)) {
                 return !!(e.preventDefault && e.preventDefault());
             }
         } else {
@@ -118,26 +118,27 @@ function createUploadForm(config) {
 }
 
 // 创建fileInput元素
-function createUploadFile(config) {
-    var inputId = "uploadFile" + _id;
+function createFileInput(config) {
+    var inputId = "fileInput" + _id;
     var oldFileInput = document.getElementById(config.fileInputId);
     var newFileInput = oldFileInput.cloneNode();
     newFileInput.id = inputId;
     newFileInput.removeAttribute("multiple");
-    if (config.onlyUploadImg) {// 文件弹出窗默认只显示图片，IE10以下无效。
+    if (config.uploadType === "avatar") {// 文件弹出窗默认只显示图片，IE10以下无效。
         newFileInput.accept = "image/gif,image/jpeg,image/jpg,image/png";
     }
-    if (config.multiple && !config.onlyUploadImg) {
+    if (config.multiple && config.uploadType !== "avatar") {
         newFileInput.setAttribute("multiple", "multiple");
     }
     oldFileInput.style.display = "none";
     oldFileInput.removeAttribute("name");
     addEvent(newFileInput, "change", function () {
         config.onChange && config.onChange(newFileInput);
+        if (!newFileInput.value) return false;
         if (config.autoUpload) {
             document.getElementById("submitButton" + _id).click();
         }
-        if (newFileInput.value && config.onlyUploadImg && isImg(newFileInput)) {
+        if (config.uploadType === "avatar" && isImg(newFileInput)) {
             var uploadButton = document.getElementById("uploadButton" + _id);
             if (newFileInput.files) {
                 var reader = new FileReader();
@@ -158,13 +159,24 @@ function createUploadButton(config) {
     var button;
     var buttonId = "uploadButton" + _id;
     var oldFileInput = document.getElementById(config.fileInputId);
-    if (config.onlyUploadImg) {
+    if (config.uploadType === "avatar") {
         button = document.createElement("div");
-        button.className = "el-upload el-upload--picture-card";
+        button.className = "ty-upload ty-upload-avatar";
         button.innerHTML = '<div><i class="el-icon-plus"></i><p>上传图片</p></div>';
-    } else {
+    }
+    else if (config.uploadType === "dragger") {
+        button = document.createElement("div");
+        button.className = "ty-upload ty-upload-dragger";
+        button.innerHTML = '<i class="el-icon-upload"></i><p class="ty-upload-text">将文件拖到此处，或<span>点击上传</span></p>'
+        addEvent(button, "dragenter", dragenter);
+        addEvent(button, "dragover", dragover);
+        addEvent(button, "dragleave", dragleave);
+        addEvent(button, "drop", drop);
+        stopOpenFile();
+    }
+    else {
         button = document.createElement("button");
-        button.className = "el-button el-button-small";
+        button.className = "ty-upload-button";
         button.innerHTML = '<span>' + config.buttonText + '</span>';
     }
     button.id = buttonId;
@@ -173,10 +185,56 @@ function createUploadButton(config) {
     return button;
 }
 
+// 拖拽事件——拖进
+function dragenter() {
+    this.className += " is-dragenter";
+}
+
+// 拖拽事件——移动
+function dragover(e) {
+    if (!this.style.border) this.style.border = "2px dashed #409eff";
+    return !!(e.preventDefault && e.preventDefault());
+}
+
+// 拖拽事件——拖离
+function dragleave() {
+    var self = this;
+    clearTimeout(this._timer);
+    this._timer = setTimeout(function () {
+        self.style.border = "";
+        clearTimeout(self._timer);
+    }, 200);
+    this.className = this.className.replace(/is-dragenter/g, "");
+}
+
+// 拖拽事件——放置
+function drop(e) {
+    var files = e.dataTransfer.files;
+    var fileInput = document.getElementById("fileInput" + _id);
+    this.style.border = "";
+    this.className = this.className.replace(/is-dragenter/g, "");
+    console.log(files);
+    if (files) {
+        fileInput.files = files;
+    }
+}
+
+// 拖拽上传时阻止浏览器默认打开文件
+function stopOpenFile() {
+    addEvent(document.body, "dragover", function (e) {
+        e.stopPropagation && e.stopPropagation();
+        return !!(e.preventDefault && e.preventDefault());
+    });
+    addEvent(document.body, "drop", function (e) {
+        e.stopPropagation && e.stopPropagation();
+        return !!(e.preventDefault && e.preventDefault());
+    });
+}
+
 // 上传按钮点击事件（因为要取消点击事件，所以不能使用匿名函数）
 function uploadButtonClickEvent() {
-    var uploadFile = document.getElementById("uploadFile" + _id);
-    uploadFile.click();
+    var fileInput = document.getElementById("fileInput" + _id);
+    fileInput.click();
 }
 
 // 验证图片大小是否超过5M
@@ -243,18 +301,38 @@ function submit() {
 }
 
 // 禁用上传
-function disabled() {
-    console.log("disabled");
-    var button = document.getElementById("uploadButton" + _id);
-    removeEvent(button, "click", uploadButtonClickEvent);
+function disabled(config) {
+    return function () {
+        var button = document.getElementById("uploadButton" + _id);
+        button.className += " is-disabled";
+        removeEvent(button, "click", uploadButtonClickEvent);
+        if (config.dragger) {
+            removeEvent(button, "dragenter", dragenter);
+            removeEvent(button, "dragover", dragover);
+            removeEvent(button, "dragleave", dragleave);
+            removeEvent(button, "drop", drop);
+        }
+    }
 }
 
 // 启用上传
-function enabled() {
-    console.log("enabled");
-    var button = document.getElementById("uploadButton" + _id);
-    removeEvent(button, "click", uploadButtonClickEvent);
-    addEvent(button, "click", uploadButtonClickEvent);
+function enabled(config) {
+    return function () {
+        var button = document.getElementById("uploadButton" + _id);
+        button.className = button.className.replace(/is-disabled/g, "");
+        removeEvent(button, "click", uploadButtonClickEvent);
+        addEvent(button, "click", uploadButtonClickEvent);
+        if (config.dragger) {
+            removeEvent(button, "dragenter", dragenter);
+            removeEvent(button, "dragover", dragover);
+            removeEvent(button, "dragleave", dragleave);
+            removeEvent(button, "drop", drop);
+            addEvent(button, "dragenter", dragenter);
+            addEvent(button, "dragover", dragover);
+            addEvent(button, "dragleave", dragleave);
+            addEvent(button, "drop", drop);
+        }
+    }
 }
 
 function init(config) {
@@ -267,8 +345,8 @@ function init(config) {
     var button = createUploadButton(config);
     if (config.data) addOtherRequestsToForm(config.data);
     var exports = {
-        disabled: disabled,
-        enabled: enabled
+        disabled: disabled(config),
+        enabled: enabled(config)
     };
     if (!config.autoUpload) {
         exports.submit = submit;
@@ -280,16 +358,19 @@ $(function () {
     var upload = init({
         fileInputId: "file",
         url: "http://localhost:3000/upload",
-        onlyUploadImg: true,
         // buttonText: "上传文件",
         // preview: false,
-        autoUpload: false,
+        // dragger: true,
+        uploadType: "dragger",//dragger avatar button
+        multiple: true,
+        // autoUpload: false,
         data: {
             code: 123,
             name: "主升浪"
         },
         onChange: function (file) {
-            // console.log(file);
+            console.log(file.files);
+            console.log(file.value);
         },
         beforeUpload: function (file) {
             // console.log(file);

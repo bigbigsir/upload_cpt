@@ -4,82 +4,14 @@
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <title>上传组件</title>
+    <link rel="shortcut icon" href="./img/favicon.ico" type="image/x-icon"/>
+    <link rel="stylesheet" href="css/base.css">
     <script src="js/jquery-1.8.3.min.js"></script>
     <script src="js/jquery.form.js"></script>
     <script src="js/index.js"></script>
-    <link rel="stylesheet" href="css/base.css">
     <style>
         html, body {
             height: 100%;
-        }
-
-        .upload-frame {
-            /*position: absolute;*/
-            /*top: -1000px;*/
-            /*left: -1000px;*/
-            /*overflow: hidden;*/
-            /*height: 1px;*/
-            /*opacity: 0;*/
-            /*filter: alpha(opacity=0);*/
-            border: 1px solid red;
-        }
-
-        .upload-form {
-            /*display: none;*/
-            border: 1px solid black;
-        }
-
-        .el-upload {
-            display: inline-block;
-            text-align: center;
-            cursor: pointer;
-            outline: none;
-        }
-
-        .el-upload--picture-card {
-            overflow: hidden;
-            box-sizing: border-box;
-            width: 148px;
-            height: 148px;
-            border: 1px dashed #c0ccda;
-            border-radius: 6px;
-            cursor: pointer;
-            vertical-align: top;
-            background-color: #fbfdff;
-        }
-
-        .el-upload--picture-card img {
-            width: 100%;
-            height: 100%;
-            display: block;
-        }
-
-        .el-upload--picture-card:hover,
-        .el-upload:focus {
-            border-color: #409eff;
-        }
-
-        .el-upload--picture-card div {
-            margin-top: 50%;
-            -webkit-transform: translateY(-50%);
-            -moz-transform: translateY(-50%);
-            -ms-transform: translateY(-50%);
-            -o-transform: translateY(-50%);
-            transform: translateY(-50%);
-        }
-
-        .el-upload--picture-card i {
-            font-size: 28px;
-            color: #8c939d;
-        }
-
-        .el-icon-plus:before {
-            content: "+";
-        }
-
-        .el-upload--picture-card p {
-            color: #8c939d;
-            line-height: 1.5;
         }
 
         [class*=" el-icon-"], [class^=el-icon-] {
@@ -96,62 +28,187 @@
             -moz-osx-font-smoothing: grayscale;
         }
 
-        .el-button {
+        /*===========================*/
+        /*==  上传组件相关样式 start  ==*/
+        /*===========================*/
+        .ty-upload-form,
+        .ty-upload-iframe {
+            /*display: none;*/
+        }
+
+        .ty-upload {
+            overflow: hidden;
+            box-sizing: border-box;
             display: inline-block;
+            border: 1px dashed #c0ccda;
+            border-radius: 6px;
+            color: #606266;
+            text-align: center;
+            cursor: pointer;
+            outline: none;
+        }
+
+        .ty-upload:hover,
+        .ty-upload:focus {
+            border-color: #409eff;
+        }
+
+        .ty-upload.is-disabled {
+            border-color: #c0ccda;
+            color: #8c939d;
+            cursor: not-allowed;
+            opacity: .7;
+            filter: alpha(opacity=70);
+        }
+
+        /*====按钮上传样式====*/
+        .ty-upload-button {
+            margin: 0;
+            padding: 9px 15px;
+            border: 1px solid #dcdfe6;
+            border-radius: 3px;
             line-height: 1;
+            font-size: 12px;
+            font-weight: 500;
+            color: #606266;
+            background: #ffffff;
             white-space: nowrap;
             cursor: pointer;
-            background: #fff;
-            border: 1px solid #dcdfe6;
-            color: #606266;
             -webkit-appearance: none;
             text-align: center;
-            box-sizing: border-box;
             outline: none;
-            margin: 0;
             transition: .1s;
-            font-weight: 500;
             -moz-user-select: none;
             -webkit-user-select: none;
             -ms-user-select: none;
-            padding: 12px 20px;
-            font-size: 14px;
-            border-radius: 4px;
         }
 
-        .el-button-small {
-            padding: 9px 15px;
-            font-size: 12px;
-            border-radius: 3px;
-        }
-
-        .el-button:focus,
-        .el-button:hover {
+        .ty-upload-button:focus,
+        .ty-upload-button:hover {
             color: #409eff;
-            border-color: #c6e2ff;
-            background-color: #ecf5ff;
         }
+
+        .ty-upload-button.is-disabled,
+        .ty-upload-button.is-disabled:focus,
+        .ty-upload-button.is-disabled:hover {
+            color: #8c939d;
+        }
+
+        /*====头像上传样式====*/
+        .ty-upload-avatar {
+            width: 148px;
+            height: 148px;
+            vertical-align: top;
+            background-color: #fbfdff;
+        }
+
+        .ty-upload-avatar div {
+            margin-top: 50%;
+            -webkit-transform: translateY(-50%);
+            -moz-transform: translateY(-50%);
+            -ms-transform: translateY(-50%);
+            -o-transform: translateY(-50%);
+            transform: translateY(-50%);
+        }
+
+        .ty-upload-avatar i {
+            font-size: 28px;
+            color: #8c939d;
+        }
+
+        .ty-upload-avatar p {
+            line-height: 1.5;
+        }
+
+        .ty-upload-avatar img {
+            display: block;
+            width: 100%;
+            height: 100%;
+            vertical-align: bottom;
+        }
+
+        .el-icon-plus:before {
+            content: "+";
+        }
+
+        /*====拖拽上传样式====*/
+        .ty-upload-dragger {
+            position: relative;
+            width: 360px;
+            height: 180px;
+            background-color: #fff;
+        }
+
+        .ty-upload-dragger .ty-upload-text {
+            color: #606266;
+            font-size: 14px;
+            text-align: center;
+        }
+
+        .ty-upload-dragger .el-icon-upload {
+            font-size: 67px;
+            color: #c0c4cc;
+            margin: 40px 0 16px;
+            line-height: 50px;
+        }
+
+        .el-icon-upload:before {
+            content: "+";
+        }
+
+        .ty-upload-dragger .ty-upload-text span {
+            color: #409eff;
+        }
+
+        .is-dragenter {
+            border: 2px dashed #409eff;
+        }
+
+        /*===========================*/
+        /*==   上传组件相关样式 end   ==*/
+        /*===========================*/
     </style>
 </head>
 <body>
-<button id="disabled" type="button" class="el-button el-button-small">
+<button id="disabled" type="button" class="ty-upload-button">
     <span>禁用上传</span>
 </button>
-<button id="enabled" type="button" class="el-button el-button-small">
+<button id="enabled" type="button" class="ty-upload-button">
     <span>启用上传</span>
 </button>
-<button id="manual" type="button" class="el-button el-button-small">
+<button id="manual" type="button" class="ty-upload-button">
     <span>手动上传</span>
 </button>
 <p>=======================================</p>
 <input id="file" name="file" type="file">
-
 <p>=======================================</p>
-<div class="el-upload el-upload--picture-card">
+<button type="button" class="ty-upload ty-upload-button is-disabled">
+    <span>禁用按钮</span>
+</button>
+<button type="button" class="ty-upload ty-upload-button">
+    <span>正常按钮</span>
+</button>
+<div class="ty-upload ty-upload-avatar is-disabled">
     <div>
         <i class="el-icon-plus"></i>
         <p>上传图片</p>
     </div>
 </div>
+<div class="ty-upload ty-upload-avatar">
+    <div>
+        <i class="el-icon-plus"></i>
+        <p>上传图片</p>
+    </div>
+</div>
+<div class="ty-upload ty-upload-dragger is-disabled">
+    <i class="el-icon-upload"></i>
+    <p class="ty-upload-text">将文件拖到此处，或<span>点击上传</span></p>
+</div>
+<div id="box" class="ty-upload ty-upload-dragger">
+    <i class="el-icon-upload"></i>
+    <p class="ty-upload-text">将文件拖到此处，或<span>点击上传</span></p>
+</div>
+<meter id="m1" value="0" min="0" max="100"></meter>
+<p>=======================================</p>
 </body>
 </html>
