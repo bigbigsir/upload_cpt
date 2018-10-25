@@ -21,7 +21,7 @@ function ajax(config) {
     }
 }
 
-var _id = Math.random();
+var _id = Math.random(), config;
 
 /**
  * @description  事件绑定，兼容各浏览器
@@ -83,9 +83,12 @@ function createUploadIFrame(config) {
 function createUploadForm(config) {
     var formId = "uploadForm" + _id;
     var submitButtonId = "submitButton" + _id;
+    var otherDataId = "otherData" + _id;
     var form = document.createElement("form");
+    var otherData = document.createElement("div");
     var submitButton = document.createElement("input");
     var fileInput = createFileInput(config);
+    otherData.id = otherDataId;
     submitButton.type = "submit";
     submitButton.id = submitButtonId;
     form.id = form.name = formId;
@@ -95,6 +98,7 @@ function createUploadForm(config) {
     form.enctype = "multipart/form-data";
     form.className = "ty-upload-form";
     form.appendChild(fileInput);
+    form.appendChild(otherData);
     form.appendChild(submitButton);
     document.body.appendChild(form);
     addEvent(form, "submit", function (e) {
@@ -186,8 +190,9 @@ function createUploadButton(config) {
 }
 
 // 拖拽事件——拖进
-function dragenter() {
+function dragenter(e) {
     this.className += " is-dragenter";
+    return !!(e.preventDefault && e.preventDefault());
 }
 
 // 拖拽事件——移动
@@ -209,13 +214,31 @@ function dragleave() {
 
 // 拖拽事件——放置
 function drop(e) {
+    var timer, newInput;
     var files = e.dataTransfer.files;
     var fileInput = document.getElementById("fileInput" + _id);
+    var uploadForm = document.getElementById("uploadForm" + _id);
     this.style.border = "";
     this.className = this.className.replace(/is-dragenter/g, "");
     console.log(files);
     if (files) {
-        fileInput.files = files;
+        if (files.length === 1 && !files[0].type && !files[0].size) {
+            return alert("不支持上传文件夹！");
+        } else if (files.length > 1 && !config.multiple) {
+            return alert("请上传单个文件！");
+        }
+        var formData = new FormData();
+        newInput = fileInput.cloneNode();
+        uploadForm.replaceChild(newInput, fileInput);
+        newInput.files = files;
+        console.log(newInput.files);
+        // console.log(fileInput);
+    }
+    else {
+        timer = setTimeout(function () {
+            alert("您的浏览器版本过低不支持拖拽上传，请点击上传文件！");
+            clearTimeout(timer);
+        });
     }
 }
 
@@ -281,18 +304,18 @@ function isImg(file) {
 }
 
 // 添加其他表单参数
-function addOtherRequestsToForm(data) {
-    var cloneElement;
-    var originalElement = document.createElement("input");
-    var uploadForm = document.getElementById("uploadForm" + _id);
-    originalElement.type = "hidden";
+function addOtherDataToForm(data) {
+    var input;
+    var otherData = document.getElementById("otherData" + _id);
+    otherData.innerHTML = "";
     for (var key in data) {
-        cloneElement = originalElement.cloneNode();
-        cloneElement.name = key;
-        cloneElement.value = data[key];
-        uploadForm.appendChild(cloneElement);
+        input = document.createElement("input");
+        input.type = "hidden";
+        input.name = key;
+        input.value = typeof data[key] === "object" ? JSON.stringify(data[key]) : data[key];
+        otherData.appendChild(input);
     }
-    return uploadForm;
+    return otherData;
 }
 
 // 提交表单
@@ -335,16 +358,17 @@ function enabled(config) {
     }
 }
 
-function init(config) {
-    config = config || {};
+function init(config1) {
+    config = config1 || {};
     config.autoUpload = config.autoUpload !== false;
     config.buttonText = config.buttonText || "上传附件";
     if (!config.url || !config.fileInputId) throw "url or fileInputId is not defined";
     var iframe = createUploadIFrame(config);
     var form = createUploadForm(config);
     var button = createUploadButton(config);
-    if (config.data) addOtherRequestsToForm(config.data);
+    if (config.data) addOtherDataToForm(config.data);
     var exports = {
+        appendData: addOtherDataToForm,
         disabled: disabled(config),
         enabled: enabled(config)
     };
@@ -362,11 +386,11 @@ $(function () {
         // preview: false,
         // dragger: true,
         uploadType: "dragger",//dragger avatar button
-        multiple: true,
+        // multiple: true,
         // autoUpload: false,
         data: {
-            code: 123,
-            name: "主升浪"
+            name: "李四",
+            code: 519628
         },
         onChange: function (file) {
             console.log(file.files);
@@ -388,6 +412,12 @@ $(function () {
     });
     $("#enabled").on("click", function () {
         upload.enabled();
+    });
+    $("#changeData").on("click", function () {
+        upload.appendData({
+            name: "张三",
+            code: 228712
+        });
     })
 });
 
