@@ -2,26 +2,24 @@
  * Created by: MoJie
  * Date: 2018/10/11
  */
+
+var _id = Math.random(), config;
+
 function ajax(config) {
-    var url = config.url;
-    var data = config.data;
-    var success = config.success;
     var xhr;
     if (window.XMLHttpRequest) {
         xhr = new XMLHttpRequest();
     } else {
         xhr = new ActiveXObject('Microsoft.XMLHTTP');
     }
-    xhr.open("POST", url);
-    xhr.send(data);
+    xhr.open("POST", config.url);
+    xhr.send(config.data);
     xhr.onreadystatechange = function () {
-        if (ajax.readyState === 4 && ajax.status === 200) {
-            success(ajax.responseText);
+        if (xhr.readyState === 4 && xhr.status === 200) {
+            config.success && config.success(JSON.parse(xhr.responseText));
         }
-    }
+    };
 }
-
-var _id = Math.random(), config;
 
 /**
  * @description  事件绑定，兼容各浏览器
@@ -91,7 +89,7 @@ function createUploadForm(config) {
     otherData.id = otherDataId;
     submitButton.type = "submit";
     submitButton.id = submitButtonId;
-    form.id = form.name = formId;
+    form.id = formId;
     form.action = config.url;
     form.method = "POST";
     form.target = "uploadIFrame" + _id;
@@ -107,7 +105,7 @@ function createUploadForm(config) {
                 alert("上传图片的大小不能超过5M！");
                 return !!(e.preventDefault && e.preventDefault());
             }
-            if (config.uploadType === "avatar" && !isImg(fileInput)) {
+            if (config.uploadType === "avatar" && !isImg(fileInput.value)) {
                 alert("请上传图片格式文件！");
                 return !!(e.preventDefault && e.preventDefault());
             }
@@ -137,13 +135,16 @@ function createFileInput(config) {
     oldFileInput.style.display = "none";
     oldFileInput.removeAttribute("name");
     addEvent(newFileInput, "change", function () {
+
+        var uploadButton, uploadList;
         config.onChange && config.onChange(newFileInput);
         if (!newFileInput.value) return false;
         if (config.autoUpload) {
             document.getElementById("submitButton" + _id).click();
         }
-        if (config.uploadType === "avatar" && isImg(newFileInput)) {
-            var uploadButton = document.getElementById("uploadButton" + _id);
+        if (config.uploadType === "avatar") {
+            if (!isImg(newFileInput.value)) return false;
+            uploadButton = document.getElementById("uploadButton" + _id);
             if (newFileInput.files) {
                 var reader = new FileReader();
                 reader.onload = function () {
@@ -154,24 +155,151 @@ function createFileInput(config) {
                 uploadButton.innerHTML = '<img style="filter:progid:DXImageTransform.Microsoft.AlphaImageLoader(sizingMethod=scale,src=\'' + newFileInput.value + '\'">';
             }
         }
+        else if (config.listType === "picture" || config.listType === "text") {
+            uploadList = document.getElementById("uploadList" + _id);
+            var li, img;
+            var firstChild;
+            if (newFileInput.files) {
+                var reader1;
+                for (var i = 0, len = newFileInput.files.length; i < len; i++) {
+                    li = document.createElement("li");
+                    li.className = "ty-upload-list-item _not-upload";
+                    var a = document.createElement("a");
+                    var label = document.createElement("label");
+                    var i_1 = document.createElement("i");
+                    var i_2 = document.createElement("i");
+                    var i_3 = document.createElement("i");
+                    i_3.className = "ty-icon-close";
+                    a.className = "ty-upload-list-item-name";
+                    label.className = "ty-upload-list-item-status-label";
+                    if (config.listType === "picture") {
+                        if (~newFileInput.files[i].type.indexOf("image/")) {
+                            reader1 = new FileReader();
+                            img = document.createElement("img");
+                            img.className = "ty-upload-list-item-thumbnail";
+                            li.appendChild(img);
+                            (function (img) {
+                                reader1.onload = function () {
+                                    img.src = this.result;
+                                };
+                            })(img);
+                            reader1.readAsDataURL(newFileInput.files[i]);
+                        } else {
+                            i_1.className = "ty-upload-list-item-thumbnail ty-icon-plus";
+                            li.appendChild(i_1);
+                        }
+                        a.innerText = newFileInput.files[i].name;
+                        i_2.className = "ty-icon-check";
+                        label.appendChild(i_2);
+                        li.appendChild(a);
+                        li.appendChild(label);
+                        li.appendChild(i_3);
+                        li.style.transform = "translateX(-270px)";
+                        // li.style.transform = "translateY(-110px)";
+                    }
+                    else {
+                        i_1.className = "ty-icon-plus";
+                        i_2.className = "ty-icon-circle-check";
+                        a.appendChild(i_1);
+                        var text = document.createTextNode(newFileInput.files[i].name);
+                        a.appendChild(text);
+                        label.appendChild(i_2);
+                        li.appendChild(a);
+                        li.appendChild(label);
+                        li.appendChild(i_3);
+                        li.style.transform = "translateX(-270px)";
+                        // li.style.transform = "translateY(-30px)";
+                    }
+                    firstChild = uploadList.firstChild;
+                    li.style.opacity = ".2";
+
+                    uploadList.insertBefore(li, firstChild);
+                    (function (li) {
+                        setTimeout(function () {
+                            li.style.opacity = "1";
+                            li.style.transform = "none";
+                        }, 200);
+                    })(li);
+                }
+            }
+            else {
+                var files = newFileInput.value.split(",");
+                for (var j = 0, len1 = files.length; j < len1; j++) {
+                    li = document.createElement("li");
+                    li.className = "ty-upload-list-item _not-upload";
+                    var a = document.createElement("a");
+                    var label = document.createElement("label");
+                    var i_1 = document.createElement("i");
+                    var i_2 = document.createElement("i");
+                    var i_3 = document.createElement("i");
+                    i_3.className = "ty-icon-close";
+                    a.className = "ty-upload-list-item-name";
+                    label.className = "ty-upload-list-item-status-label";
+                    if (config.listType === "picture") {
+                        if (isImg(files[j])) {
+                            img = document.createElement("img");
+                            img.className = "ty-upload-list-item-thumbnail";
+                            img.style.filter = 'progid:DXImageTransform.Microsoft.AlphaImageLoader(sizingMethod=scale,src="' + files[j] + '"';
+                            li.appendChild(img);
+                        } else {
+                            i_1.className = "ty-upload-list-item-thumbnail ty-icon-plus";
+                            li.appendChild(i_1);
+                        }
+                        a.innerText = getFileName(files[j]);
+                        i_2.className = "ty-icon-check";
+                        label.appendChild(i_2);
+                        li.appendChild(a);
+                        li.appendChild(label);
+                        li.appendChild(i_3);
+                    }
+                    else {
+                        i_1.className = "ty-icon-plus";
+                        i_2.className = "ty-icon-circle-check";
+                        a.appendChild(i_1);
+                        var text = document.createTextNode(newFileInput.files[i].name);
+                        a.appendChild(text);
+                        label.appendChild(i_2);
+                        li.appendChild(a);
+                        li.appendChild(label);
+                        li.appendChild(i_3);
+                    }
+                    firstChild = uploadList.firstChild;
+                    uploadList.insertBefore(li, firstChild);
+                }
+            }
+        }
     });
     return newFileInput;
 }
 
+// 根据文件路径获取文件名称
+function getFileName(path) {
+    var arr;
+    if (typeof path === "string") {
+        return path.replace(/.*\\([^\\]+)$/, "$1")
+    } else {
+        arr = [];
+        for (var i = 0, len = path.length; i < len; i++) {
+            arr.push(path.replace(/.*\\([^\\]+)$/, "$1"));
+        }
+        return arr;
+    }
+}
+
 // 创建上传按钮
 function createUploadButton(config) {
-    var button;
+    var button, ul;// 上传按钮，预览容器
     var buttonId = "uploadButton" + _id;
     var oldFileInput = document.getElementById(config.fileInputId);
     if (config.uploadType === "avatar") {
         button = document.createElement("div");
         button.className = "ty-upload ty-upload-avatar";
-        button.innerHTML = '<div><i class="el-icon-plus"></i><p>上传图片</p></div>';
+        button.innerHTML = '<div><i class="ty-icon-plus"></i><p>上传图片</p></div>';
     }
     else if (config.uploadType === "dragger") {
         button = document.createElement("div");
         button.className = "ty-upload ty-upload-dragger";
-        button.innerHTML = '<i class="el-icon-upload"></i><p class="ty-upload-text">将文件拖到此处，或<span>点击上传</span></p>'
+        button.innerHTML = '<i class="ty-icon-upload"></i><p class="ty-upload-text">将文件拖到此处，或<span>点击上传</span></p>'
         addEvent(button, "dragenter", dragenter);
         addEvent(button, "dragover", dragover);
         addEvent(button, "dragleave", dragleave);
@@ -183,8 +311,16 @@ function createUploadButton(config) {
         button.className = "ty-upload-button";
         button.innerHTML = '<span>' + config.buttonText + '</span>';
     }
+    if (config.uploadType !== "avatar" && (config.listType === "picture" || config.listType === "text")) {
+        ul = document.createElement("ul");
+        ul.id = "uploadList" + _id;
+        ul.className = "ty-upload-list" +
+            (config.listType === "picture" ? " ty-upload-list-picture" : "") +
+            (config.isVertical ? " ty-upload-list-column" : "");
+    }
     button.id = buttonId;
     insertAfter(button, oldFileInput);
+    insertAfter(ul, button);
     addEvent(button, "click", uploadButtonClickEvent);
     return button;
 }
@@ -197,49 +333,67 @@ function dragenter(e) {
 
 // 拖拽事件——移动
 function dragover(e) {
-    if (!this.style.border) this.style.border = "2px dashed #409eff";
+    if (!~this.className.indexOf("is-dragenter")) {
+        this.className += " is-dragenter";
+    }
     return !!(e.preventDefault && e.preventDefault());
 }
 
 // 拖拽事件——拖离
 function dragleave() {
     var self = this;
-    clearTimeout(this._timer);
+    clearTimeout(this._timer); // 移动过程中，子元素会触发拖离事件，延迟清除边框，防止元素快速抖动
     this._timer = setTimeout(function () {
-        self.style.border = "";
+        self.className = self.className.replace(/is-dragenter/g, "");
         clearTimeout(self._timer);
+        self._timer = null;
     }, 200);
-    this.className = this.className.replace(/is-dragenter/g, "");
 }
 
 // 拖拽事件——放置
 function drop(e) {
-    var timer, newInput;
     var files = e.dataTransfer.files;
     var fileInput = document.getElementById("fileInput" + _id);
-    var uploadForm = document.getElementById("uploadForm" + _id);
-    this.style.border = "";
     this.className = this.className.replace(/is-dragenter/g, "");
-    console.log(files);
+    // console.log(files);
     if (files) {
         if (files.length === 1 && !files[0].type && !files[0].size) {
             return alert("不支持上传文件夹！");
         } else if (files.length > 1 && !config.multiple) {
             return alert("请上传单个文件！");
         }
-        var formData = new FormData();
-        newInput = fileInput.cloneNode();
-        uploadForm.replaceChild(newInput, fileInput);
-        newInput.files = files;
-        console.log(newInput.files);
-        // console.log(fileInput);
+        if (!config.autoUpload) {
+            this._files = this._files || [];
+            for (var i = 0, len = files.length; i < len; i++) {
+                this._files.push(files[i])
+            }
+        } else {
+            formDataSubmit(files);
+        }
     }
     else {
-        timer = setTimeout(function () {
+        var timer = setTimeout(function () {
             alert("您的浏览器版本过低不支持拖拽上传，请点击上传文件！");
             clearTimeout(timer);
         });
     }
+}
+
+// FormData方式上传
+function formDataSubmit(files) {
+    var formData = new FormData();
+    var fileInput = document.getElementById("fileInput" + _id);
+    for (var i = 0, len = files.length; i < len; i++) {
+        formData.append(fileInput.name, files[i]);
+    }
+    for (var key in config.data) {
+        formData.append(key, config.data[key]);
+    }
+    ajax({
+        url: config.url,
+        data: formData,
+        success: config.success
+    });
 }
 
 // 拖拽上传时阻止浏览器默认打开文件
@@ -289,10 +443,10 @@ function limitImgMaxSize(file, maxSize) {
 }
 
 // 验证文件是否是图片
-function isImg(file) {
+function isImg(fileValue) {
     var i, len;
     var suffixIndex, suffix;
-    var paths = file.value.split(",");
+    var paths = fileValue.split(",");
     for (i = 0, len = paths.length; i < len; i++) {
         suffixIndex = paths[i].lastIndexOf(".") + 1;
         suffix = paths[i].substring(suffixIndex).toUpperCase();
@@ -320,7 +474,13 @@ function addOtherDataToForm(data) {
 
 // 提交表单
 function submit() {
-    document.getElementById("submitButton" + _id).click();
+    var submitButton = document.getElementById("submitButton" + _id);
+    var uploadButton = document.getElementById("uploadButton" + _id);
+    if (config.uploadType === "dragger" && !config.autoUpload) {
+        formDataSubmit(uploadButton._files);
+        uploadButton._files = null;
+    }
+    submitButton.click();
 }
 
 // 禁用上传
@@ -383,18 +543,22 @@ $(function () {
         fileInputId: "file",
         url: "http://localhost:3000/upload",
         // buttonText: "上传文件",
-        // preview: false,
-        // dragger: true,
+        listType: "picture",//picture text
+        isVertical: true,
+        multiple: true,
+        autoUpload: false,
         uploadType: "dragger",//dragger avatar button
-        // multiple: true,
-        // autoUpload: false,
-        data: {
-            name: "李四",
-            code: 519628
-        },
+        // data: {
+        //     name: "李四",
+        //     code: 519628
+        // },
         onChange: function (file) {
             console.log(file.files);
             console.log(file.value);
+            upload.appendData({
+                name: "张三",
+                code: 228712
+            });
         },
         beforeUpload: function (file) {
             // console.log(file);
@@ -413,11 +577,21 @@ $(function () {
     $("#enabled").on("click", function () {
         upload.enabled();
     });
-    $("#changeData").on("click", function () {
-        upload.appendData({
-            name: "张三",
-            code: 228712
+    $("#appendData").on("click", function () {
+        // upload.appendData({
+        //     name: "张三",
+        //     code: 228712
+        // });
+        $(".ty-upload-list-picture .ty-upload-list-item").css({
+            transform: "translateY(-92px)",
+            opacity: 0
         });
+        setTimeout(function () {
+            $(".ty-upload-list-picture .ty-upload-list-item").css({
+                transform: "none",
+                opacity: 1
+            });
+        }, 1000)
     })
 });
 

@@ -10,11 +10,20 @@
     <script src="js/jquery.form.js"></script>
     <script src="js/index.js"></script>
     <style>
+        * {
+            margin: 0;
+            padding: 0;
+        }
+
+        li:focus {
+            outline: 0;
+        }
+
         html, body {
             height: 100%;
         }
 
-        [class*=" el-icon-"], [class^=el-icon-] {
+        [class*=" ty-icon-"], [class^=ty-icon-] {
             font-family: element-icons !important;
             speak: none;
             font-style: normal;
@@ -127,7 +136,7 @@
             vertical-align: bottom;
         }
 
-        .el-icon-plus:before {
+        .ty-icon-plus:before {
             content: "+";
         }
 
@@ -145,14 +154,14 @@
             text-align: center;
         }
 
-        .ty-upload-dragger .el-icon-upload {
+        .ty-upload-dragger .ty-icon-upload {
             font-size: 67px;
             color: #c0c4cc;
             margin: 40px 0 16px;
             line-height: 50px;
         }
 
-        .el-icon-upload:before {
+        .ty-icon-upload:before {
             content: "+";
         }
 
@@ -164,52 +173,276 @@
             border: 2px dashed #409eff;
         }
 
+        /*================预览文件列表样式=====================*/
+        .ty-upload-list {
+            overflow: auto;
+            margin: 0;
+            padding: 0;
+            list-style: none;
+        }
+
+        .ty-upload-list-item {
+            position: relative;
+            box-sizing: border-box;
+            width: 100%;
+            min-width: 260px;
+            margin-top: 5px;
+            border-radius: 4px;
+            font-size: 14px;
+            line-height: 1.8;
+            color: #606266;
+            transition: all .5s cubic-bezier(.55, 0, .1, 1);
+        }
+
+        .ty-upload-list-item:hover {
+            background-color: #f5f7fa;
+        }
+
+        .ty-upload-list-item.is-success:hover .ty-upload-list-item-status-label {
+            display: none;
+        }
+
+        .ty-upload-list-item:hover .ty-icon-close {
+            display: block;
+        }
+
+        /*文件名字*/
+        .ty-upload-list-item-name {
+            display: block;
+            overflow: hidden;
+            margin-right: 40px;
+            padding-left: 4px;
+            color: #606266;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            transition: color .3s;
+        }
+
+        .ty-upload-list-item.is-success .ty-upload-list-item-name:focus,
+        .ty-upload-list-item.is-success .ty-upload-list-item-name:hover {
+            color: #409eff;
+            cursor: pointer;
+        }
+
+        .ty-upload-list-item-name i {
+            height: 100%;
+            margin-right: 7px;
+            color: #909399;
+            line-height: inherit;
+        }
+
+        /*上传成功标识*/
+        .ty-upload-list-item-status-label {
+            display: none;
+            position: absolute;
+            right: 5px;
+            top: 0;
+            line-height: inherit;
+        }
+
+        /*上传成功标识*/
+        .ty-upload-list-item.is-success .ty-upload-list-item-status-label {
+            display: block;
+        }
+
+        /*删除按钮*/
+        .ty-upload-list-item .ty-icon-close {
+            display: none;
+            position: absolute;
+            top: 5px;
+            right: 5px;
+            cursor: pointer;
+            opacity: .75;
+            color: #606266;
+        }
+
+        .ty-upload-list-item .ty-icon-close:hover {
+            opacity: 1;
+        }
+
+        .ty-icon-close:before {
+            content: "✘";
+        }
+
+        /*==================列排预览====================*/
+        .ty-upload-list-column .ty-upload-list-item {
+            float: left;
+            width: 260px;
+            margin-right: 10px;
+        }
+
+        /*===========图片预览模式==============*/
+        .ty-upload-list-column .ty-upload-list-item:last-child {
+            margin-right: 0;
+        }
+
+        .ty-upload-list-picture .ty-upload-list-item {
+            overflow: hidden;
+            margin-top: 10px;
+            padding: 10px 10px 10px 90px;
+            height: 92px;
+            border: 1px solid #c0ccda;
+            border-radius: 6px;
+            z-index: 0;
+            background-color: #fff;
+        }
+
+        /*略缩图*/
+        .ty-upload-list-picture .ty-upload-list-item-thumbnail {
+            position: relative;
+            display: inline-block;
+            float: left;
+            margin-left: -80px;
+            width: 70px;
+            height: 70px;
+            line-height: 70px;
+            font-size: 70px;
+            text-align: center;
+            z-index: 1;
+            vertical-align: middle;
+        }
+
+        /*文件名字*/
+        .ty-upload-list-picture .ty-upload-list-item-name {
+            height: 70px;
+            line-height: 70px;
+        }
+
+        .ty-upload-list-picture .ty-upload-list-item-status-label {
+            position: absolute;
+            right: -17px;
+            top: -7px;
+            width: 46px;
+            height: 26px;
+            text-align: center;
+            box-shadow: 0 1px 1px #ccc;
+            background: #13ce66;
+            transform: rotate(45deg);
+        }
+
+        .ty-upload-list-picture .ty-upload-list-item-status-label i {
+            margin-top: 12px;
+            font-size: 12px;
+            color: #fff;
+            transform: rotate(-45deg);
+        }
+
+        .ty-icon-check:before {
+            content: "√";
+        }
+
+        /*文本预览模式*/
+        .ty-icon-circle-check {
+            color: #67c23a;
+        }
+
+        .ty-icon-circle-check:before {
+            content: "√";
+        }
+
         /*===========================*/
         /*==   上传组件相关样式 end   ==*/
         /*===========================*/
     </style>
 </head>
 <body>
-<button id="disabled" type="button" class="ty-upload-button">
+<button id="disabled" type="button" class="ty-upload ty-upload-button">
     <span>禁用上传</span>
 </button>
-<button id="enabled" type="button" class="ty-upload-button">
+<button id="enabled" type="button" class="ty-upload ty-upload-button">
     <span>启用上传</span>
 </button>
-<button id="manual" type="button" class="ty-upload-button">
+<button id="manual" type="button" class="ty-upload ty-upload-button">
     <span>手动上传</span>
 </button>
-<button id="changeData" type="button" class="ty-upload-button">
+<button id="appendData" type="button" class="ty-upload ty-upload-button">
     <span>改变数据</span>
 </button>
 <p>=======================================</p>
 <input id="file" name="file" type="file">
 <p>=======================================</p>
-<!--<button type="button" class="ty-upload ty-upload-button is-disabled">-->
-<!--<span>禁用按钮</span>-->
-<!--</button>-->
-<!--<button type="button" class="ty-upload ty-upload-button">-->
-<!--<span>正常按钮</span>-->
-<!--</button>-->
-<!--<div class="ty-upload ty-upload-avatar is-disabled">-->
-<!--<div>-->
-<!--<i class="el-icon-plus"></i>-->
-<!--<p>上传图片</p>-->
-<!--</div>-->
-<!--</div>-->
-<!--<div class="ty-upload ty-upload-avatar">-->
-<!--<div>-->
-<!--<i class="el-icon-plus"></i>-->
-<!--<p>上传图片</p>-->
-<!--</div>-->
-<!--</div>-->
-<!--<div class="ty-upload ty-upload-dragger is-disabled">-->
-<!--<i class="el-icon-upload"></i>-->
-<!--<p class="ty-upload-text">将文件拖到此处，或<span>点击上传</span></p>-->
-<!--</div>-->
-<!--<div class="ty-upload ty-upload-dragger">-->
-<!--<i class="el-icon-upload"></i>-->
-<!--<p class="ty-upload-text">将文件拖到此处，或<span>点击上传</span></p>-->
-<!--</div>-->
+<ul class="ty-upload-list ty-upload-list-column ty-upload-list-picture">
+    <li tabindex="0" class="ty-upload-list-item is-success">
+        <i class="ty-upload-list-item-thumbnail ty-icon-plus"></i>
+        <!--<img src="img/516221.jpg" alt="" class="ty-upload-list-item-thumbnail">-->
+        <a class="ty-upload-list-item-name">
+            516221.jpg516221.jpg516221.jpg516221.jpg516221.jpg516221.jpg
+        </a>
+        <label class="ty-upload-list-item-status-label">
+            <i class="ty-icon-check"></i>
+        </label>
+        <i class="ty-icon-close"></i>
+    </li>
+    <li tabindex="0" class="ty-upload-list-item is-success">
+        <img src="img/516221.jpg" alt="" class="ty-upload-list-item-thumbnail">
+        <a class="ty-upload-list-item-name">
+            516221.jpg
+        </a>
+        <label class="ty-upload-list-item-status-label">
+            <i class="ty-icon-check"></i>
+        </label>
+        <i class="ty-icon-close"></i>
+    </li>
+    <li tabindex="0" class="ty-upload-list-item is-success">
+        <img src="img/516221.jpg" alt="" class="ty-upload-list-item-thumbnail">
+        <a class="ty-upload-list-item-name">
+            516221.jpg
+        </a>
+        <label class="ty-upload-list-item-status-label">
+            <i class="ty-icon-check"></i>
+        </label>
+        <i class="ty-icon-close"></i>
+    </li>
+    <li tabindex="0" class="ty-upload-list-item is-success">
+        <img src="img/516221.jpg" alt="" class="ty-upload-list-item-thumbnail">
+        <a class="ty-upload-list-item-name">
+            516221.jpg
+        </a>
+        <label class="ty-upload-list-item-status-label">
+            <i class="ty-icon-check"></i>
+        </label>
+        <i class="ty-icon-close"></i>
+    </li>
+</ul>
+<p>=======================================</p>
+<ul class="ty-upload-list ty-upload-list-column ty-upload-list-text">
+    <li tabindex="0" class="ty-upload-list-item is-success">
+        <a class="ty-upload-list-item-name">
+            <i class="ty-icon-plus"></i>food.jpeg
+        </a>
+        <label class="ty-upload-list-item-status-label">
+            <i class="ty-icon-circle-check"></i>
+        </label>
+        <i class="ty-icon-close"></i>
+    </li>
+    <li tabindex="0" class="ty-upload-list-item is-success">
+        <a class="ty-upload-list-item-name">
+            <i class="ty-icon-plus"></i>food.jpeg
+        </a>
+        <label class="ty-upload-list-item-status-label">
+            <i class="ty-icon-circle-check"></i>
+        </label>
+        <i class="ty-icon-close"></i>
+    </li>
+    <li tabindex="0" class="ty-upload-list-item is-success">
+        <a class="ty-upload-list-item-name">
+            <i class="ty-icon-plus"></i>food.jpeg
+        </a>
+        <label class="ty-upload-list-item-status-label">
+            <i class="ty-icon-circle-check"></i>
+        </label>
+        <i class="ty-icon-close"></i>
+    </li>
+    <li tabindex="0" class="ty-upload-list-item is-success">
+        <a class="ty-upload-list-item-name">
+            <i class="ty-icon-plus"></i>food.jpeg
+        </a>
+        <label class="ty-upload-list-item-status-label">
+            <i class="ty-icon-circle-check"></i>
+        </label>
+        <i class="ty-icon-close"></i>
+    </li>
+</ul>
+<p>=======================================</p>
 </body>
 </html>
