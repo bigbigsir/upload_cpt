@@ -1,16 +1,652 @@
+@charset "UTF-8";
 * {
     margin: 0;
     padding: 0;
 }
 
-input {
-    outline: none;
+html, body {
+    height: 100%;
 }
 
 body {
-    height: 100%;
+    box-sizing: border-box;
+    padding: 6px;
     font-size: 14px;
     font-weight: 400;
     font-family: Helvetica Neue, Helvetica, PingFang SC, Hiragino Sans GB, Microsoft YaHei, SimSun, sans-serif;
     -webkit-font-smoothing: antialiased;
 }
+
+/*================================================================*/
+/*====================   上传组件相关样式 start   ===================*/
+/*================================================================*/
+.ty-upload-form,
+.ty-upload-iframe {
+    display: none;
+}
+
+.ty-list-row-to {
+    transform: translateY(-40%);
+    opacity: 0;
+}
+
+.ty-list-column-to {
+    transform: translateX(-40%);
+    opacity: 0;
+}
+
+.ty-upload-tips {
+    margin-top: 7px;
+    font-size: 12px;
+    color: #606266;
+}
+
+.ty-upload-tips + .ty-upload-list-text {
+    margin-top: 10px;
+}
+
+/*=================================================*/
+/*=================  上传按钮样式  ==================*/
+.ty-upload {
+    overflow: hidden;
+    box-sizing: border-box;
+    display: inline-block;
+    border: 1px dashed #c0ccda;
+    border-radius: 6px;
+    color: #606266;
+    text-align: center;
+    cursor: pointer;
+    outline: none;
+}
+
+.ty-upload:hover,
+.ty-upload:focus {
+    border-color: #409eff;
+}
+
+.ty-upload.is-disabled,
+.ty-upload.is-disabled:hover,
+.ty-upload.is-disabled:focus {
+    border-color: #c0ccda;
+    color: #8c939d;
+    cursor: not-allowed;
+    opacity: .7;
+    filter: alpha(opacity=70);
+}
+
+/*====  Button上传样式  ====*/
+.ty-upload-button {
+    margin: 0;
+    padding: 9px 12px;
+    border: 1px solid #dcdfe6;
+    border-radius: 3px;
+    line-height: 1;
+    font-size: 14px;
+    font-weight: 500;
+    color: #606266;
+    background: #ffffff;
+    white-space: nowrap;
+    cursor: pointer;
+    -webkit-appearance: none;
+    text-align: center;
+    outline: none;
+    transition: .1s;
+    -moz-user-select: none;
+    -webkit-user-select: none;
+    -ms-user-select: none;
+}
+
+.ty-upload-button-small {
+    padding: 6px 10px;
+}
+
+.ty-upload-button:focus,
+.ty-upload-button:hover {
+    color: #409eff;
+}
+
+.ty-upload-button .ty-upload-icon-upload {
+    margin-right: 2px;
+}
+
+/*====  picture上传样式  ====*/
+.ty-upload-picture-card {
+    width: 148px;
+    height: 148px;
+    vertical-align: top;
+    background-color: #fbfdff;
+}
+
+.ty-upload-picture-card .ty-upload-icon-add-wrap {
+    margin-top: 50%;
+    -webkit-transform: translateY(-50%);
+    -moz-transform: translateY(-50%);
+    -ms-transform: translateY(-50%);
+    -o-transform: translateY(-50%);
+    transform: translateY(-50%);
+}
+
+.ty-upload-picture-card .ty-upload-icon-add {
+    font-size: 28px;
+    color: #8c939d;
+}
+
+.ty-upload-picture-card .ty-upload-text {
+    margin-top: 6px;
+    line-height: 1.5;
+}
+
+/*====  dragger上传样式  ====*/
+.ty-upload-dragger {
+    position: relative;
+    width: 360px;
+    height: 180px;
+    background-color: #fff;
+}
+
+.ty-upload-dragger:before {
+    content: " ";
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    opacity: 0;
+    filter: alpha(opacity=0);
+    background-color: #ffffff;
+}
+
+.ty-upload-dragger .ty-upload-icon-upload {
+    margin-top: 40px;
+    font-size: 68px;
+    color: #c0c4cc;
+}
+
+.ty-upload-dragger .ty-upload-text {
+    margin-top: 6px;
+    line-height: 20px;
+    font-size: 14px;
+    text-align: center;
+}
+
+.ty-upload-dragger .ty-upload-text em {
+    font-style: normal;
+    color: #409eff;
+}
+
+.ty-upload-dragger.is-dragenter {
+    border: 2px dashed #409eff;
+}
+
+/*=================================================*/
+/*==============  文件列表排列对齐样式  ===============*/
+
+/*====  横排对齐  ====*/
+.ty-upload-list-picture.ty-upload-list-row .ty-upload-list-item,
+.ty-upload-list-text.ty-upload-list-row .ty-upload-list-item {
+    min-width: 260px;
+}
+
+/*====  纵列对齐  ====*/
+.ty-upload-list-picture.ty-upload-list-column .ty-upload-list-item,
+.ty-upload-list-text.ty-upload-list-column .ty-upload-list-item {
+    display: inline-block;
+    width: 260px;
+    margin-right: 10px;
+}
+
+/*====  照片墙纵列对齐  ====*/
+.ty-upload-list-picture-card.ty-upload-list-column {
+    display: inline;
+    vertical-align: top;
+}
+
+.ty-upload-list-picture-card.ty-upload-list-column .ty-upload-list-item {
+    display: inline-block;
+}
+
+/*=================================================*/
+/*================  文件列表共用样式  ================*/
+.ty-upload-list {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+/*====  文件项容器样式  ====*/
+.ty-upload-list-item {
+    position: relative;
+    box-sizing: border-box;
+    width: 100%;
+    margin-top: 5px;
+    border-radius: 4px;
+    font-size: 14px;
+    line-height: 1.8;
+    color: #606266;
+    transition: all .8s cubic-bezier(.55, 0, .1, 1);
+}
+
+.ty-upload-list-item:hover {
+    background-color: #f5f7fa;
+}
+
+/*====  文件名字  ====*/
+.ty-upload-list-item-name {
+    display: block;
+    overflow: hidden;
+    margin-right: 40px;
+    padding-left: 4px;
+    color: #606266;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    transition: color .3s;
+}
+
+.ty-upload-list-item-name .ty-upload-list-item-document,
+.ty-upload-list-item-name .ty-upload-list-item-picture {
+    /*height: 100%;*/
+    margin-right: 7px;
+    color: #909399;
+    line-height: inherit;
+}
+
+/*.ty-upload-list-item.is-success .ty-upload-list-item-name:focus,*/
+.ty-upload-list-item.is-success .ty-upload-list-item-name:hover {
+    color: #409eff;
+    cursor: pointer;
+}
+
+/*====  上传成功标记  ====*/
+.ty-upload-list-item-status-label {
+    display: none;
+    position: absolute;
+    right: 5px;
+    top: 0;
+    line-height: inherit;
+}
+
+.ty-upload-list-item.is-success .ty-upload-list-item-status-label {
+    display: block;
+}
+
+.ty-upload-list-item.is-success:hover .ty-upload-list-item-status-label {
+    display: none;
+}
+
+.ty-upload-list-item-status-label .ty-upload-list-item-success {
+    color: #67c23a;
+}
+
+.ty-upload-picture-card .ty-upload-list-item-success,
+.ty-upload-list-picture .ty-upload-list-item-success,
+.ty-upload-list-picture-card .ty-upload-list-item-success {
+    margin-top: 12px;
+    font-size: 12px;
+    color: #fff;
+    transform: rotate(-45deg);
+}
+
+.ty-upload-picture-card .ty-upload-list-item-success,
+.ty-upload-list-picture-card .ty-upload-list-item-success {
+    margin-top: 11px;
+}
+
+/*====  关闭按钮  ====*/
+.ty-upload-list-item .ty-upload-list-item-close {
+    display: none;
+    position: absolute;
+    top: 6px;
+    right: 5px;
+    cursor: pointer;
+    opacity: .75;
+    color: #606266;
+}
+
+.ty-upload-list-item .ty-upload-list-item-close:hover {
+    opacity: 1;
+}
+
+.ty-upload-list-item:hover .ty-upload-list-item-close {
+    display: block;
+}
+
+/*=================================================*/
+/*=============  文件列表略缩图模式样式  =============*/
+.ty-upload-list-picture .ty-upload-list-item {
+    overflow: hidden;
+    margin-top: 10px;
+    padding: 10px 10px 10px 90px;
+    height: 92px;
+    border: 1px solid #c0ccda;
+    border-radius: 6px;
+    z-index: 0;
+    background-color: #fff;
+}
+
+/*====  略缩图  ====*/
+.ty-upload-list-picture .ty-upload-list-item-thumbnail {
+    position: relative;
+    display: inline-block;
+    float: left;
+    margin-left: -80px;
+    width: 70px;
+    height: 70px;
+    z-index: 1;
+    vertical-align: middle;
+}
+
+/*====  文件名字 ====*/
+.ty-upload-list-picture .ty-upload-list-item-name {
+    margin-top: 0;
+    line-height: 70px;
+}
+
+.ty-upload-list-picture .ty-upload-list-item.is-uploading .ty-upload-list-item-name {
+    margin-top: 20px;
+    line-height: 30px;
+}
+
+.ty-upload-list-picture .ty-upload-list-item-name .ty-upload-list-item-document {
+    position: absolute;
+    left: 9px;
+    top: 10px;
+    line-height: 1;
+    font-size: 70px;
+}
+
+/*====  上传成功标记 ====*/
+.ty-upload-list-picture .ty-upload-list-item-status-label {
+    position: absolute;
+    right: -17px;
+    top: -7px;
+    width: 46px;
+    height: 26px;
+    text-align: center;
+    box-shadow: 0 1px 1px #ccc;
+    background: #13ce66;
+    transform: rotate(45deg);
+}
+
+/*=================================================*/
+/*==============  照片墙/头像模式样式  ===============*/
+.ty-upload-picture-card .ty-upload-list-item {
+    margin: 0;
+    height: 100%;
+    border-radius: 0;
+}
+
+.ty-upload-list-picture-card .ty-upload-list-item {
+    overflow: hidden;
+    box-sizing: border-box;
+    width: 148px;
+    height: 148px;
+    margin: 0 8px 8px 0;
+    border: 1px solid #c0ccda;
+    border-radius: 6px;
+    background-color: #fff;
+}
+
+/*====  略缩图  ====*/
+.ty-upload-picture-card .ty-upload-list-item-thumbnail,
+.ty-upload-list-picture-card .ty-upload-list-item-thumbnail {
+    position: absolute;
+    top: 0;
+    left: 0;
+    display: block;
+    width: 100%;
+    height: 100%;
+    vertical-align: bottom;
+    z-index: 2;
+}
+
+.ty-upload-picture-card .ty-upload-list-item.is-uploading .ty-upload-list-item-thumbnail,
+.ty-upload-list-picture-card .ty-upload-list-item.is-uploading .ty-upload-list-item-thumbnail {
+    display: none;
+}
+
+/*====  文件名字  ====*/
+.ty-upload-picture-card .ty-upload-list-item.is-uploading .ty-upload-list-item-picture,
+.ty-upload-list-picture-card .ty-upload-list-item.is-uploading .ty-upload-list-item-name {
+    display: none;
+}
+
+.ty-upload-picture-card .ty-upload-list-item-picture,
+.ty-upload-list-picture-card .ty-upload-list-item-name .ty-upload-list-item-picture {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: auto;
+    height: auto;
+    line-height: 1;
+    font-size: 70px;
+    -webkit-transform: translate(-50%, -50%);
+    -moz-transform: translate(-50%, -50%);
+    -ms-transform: translate(-50%, -50%);
+    -o-transform: translate(-50%, -50%);
+    transform: translate(-50%, -50%);
+    z-index: 1;
+}
+
+/*====  上传成功标记  ====*/
+.ty-upload-picture-card .ty-upload-list-item-status-label,
+.ty-upload-list-picture-card .ty-upload-list-item-status-label {
+    position: absolute;
+    right: -15px;
+    top: -6px;
+    width: 40px;
+    height: 24px;
+    background: #13ce66;
+    text-align: center;
+    transform: rotate(45deg);
+    box-shadow: 0 0 1pc 1px rgba(0, 0, 0, .2);
+    z-index: 3;
+}
+
+.ty-upload-picture-card .ty-upload-list-item.is-success:hover .ty-upload-list-item-status-label {
+    display: block;
+}
+
+/*====  预览/删除按钮  ====*/
+.ty-upload-list-picture-card .ty-upload-list-item-actions {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    left: 0;
+    top: 0;
+    opacity: 0;
+    font-size: 20px;
+    color: #fff;
+    text-align: center;
+    cursor: default;
+    background-color: rgba(0, 0, 0, .5);
+    transition: opacity .3s;
+    z-index: 4;
+}
+
+.ty-upload-list-picture-card .ty-upload-list-item-actions:hover {
+    opacity: 1;
+}
+
+.ty-upload-list-picture-card .ty-upload-list-item-actions:after {
+    display: inline-block;
+    content: " ";
+    height: 100%;
+    vertical-align: middle;
+}
+
+.ty-upload-list-item-actions .ty-upload-list-item-preview,
+.ty-upload-list-item-actions .ty-upload-list-item-delete {
+    display: none;
+    cursor: pointer;
+}
+
+.ty-upload-list-item-actions:hover .ty-upload-list-item-preview,
+.ty-upload-list-item-actions:hover .ty-upload-list-item-delete {
+    display: inline-block;
+}
+
+.ty-upload-list-item-actions .ty-upload-list-item-delete {
+    margin-left: 15px;
+}
+
+/*=================================================*/
+/*================  条线进度条样式  =================*/
+.ty-progress {
+    position: relative;
+    line-height: 1;
+}
+
+.ty-upload-list-item .ty-progress {
+    position: absolute;
+    top: 20px;
+    width: 100%;
+}
+
+/*====  进度条容器  ====*/
+.ty-progress-bar {
+    display: inline-block;
+    box-sizing: border-box;
+    width: 100%;
+    vertical-align: middle;
+}
+
+.ty-progress-bar-outer {
+    overflow: hidden;
+    position: relative;
+    height: 2px;
+    border-radius: 100px;
+    background-color: #ebeef5;
+    vertical-align: middle;
+}
+
+.ty-progress-bar-inner {
+    position: absolute;
+    left: 0;
+    top: 0;
+    height: 100%;
+    border-radius: 100px;
+    line-height: 1;
+    background-color: #409eff;
+    text-align: right;
+    white-space: nowrap;
+}
+
+.ty-progress-bar-inner:after {
+    display: inline-block;
+    content: "";
+    height: 100%;
+    vertical-align: middle;
+}
+
+/*====  进度百分比文字  ====*/
+.ty-progress-text {
+    display: inline-block;
+    margin-left: 10px;
+    font-size: 14px;
+    line-height: 1;
+    color: #606266;
+    vertical-align: middle;
+}
+
+.ty-upload-list-item .ty-progress-text {
+    position: absolute;
+    right: 0;
+    top: -11px;
+    font-size: 12px;
+}
+
+.ty-upload-list-item:hover .ty-progress-text {
+    display: none;
+}
+
+/*====  略缩图模式下进度条样式  ====*/
+.ty-upload-list-picture .ty-progress {
+    position: relative;
+    top: -7px;
+}
+
+.ty-upload-list-picture .ty-upload-list-item:hover .ty-progress-text {
+    display: block;
+}
+
+/*=================================================*/
+/*================  圆形进度条样式  =================*/
+.ty-upload-picture-card .ty-progress,
+.ty-upload-list-picture-card .ty-progress {
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    text-align: center;
+}
+
+/*====  SVG容器  ====*/
+.ty-progress-circle {
+    position: relative;
+    top: 50%;
+    margin: -63px auto 0;
+    height: 126px;
+    width: 126px;
+}
+
+/*====  进度百分比文字  ====*/
+.ty-upload-picture-card .ty-upload-list-item .ty-progress-text,
+.ty-upload-list-picture-card .ty-upload-list-item .ty-progress-text {
+    position: absolute;
+    top: 50%;
+    left: 0;
+    margin: 0;
+    width: 100%;
+    font-size: 16px;
+    text-align: center;
+    transform: translateY(-50%);
+}
+
+.ty-upload-picture-card .ty-upload-list-item:hover .ty-progress-text,
+.ty-upload-list-picture-card .ty-upload-list-item:hover .ty-progress-text {
+    display: block;
+}
+
+/*=================================================*/
+/*=================  进度图标样式  ==================*/
+.ty-upload-list-item .ty-upload-list-item-uploading {
+    display: none;
+    position: absolute;
+    top: 6px;
+    right: 5px;
+    font-size: 16px;
+    line-height: 1;
+    cursor: pointer;
+    /*color: #c0c4cc;*/
+}
+
+.ty-upload-list-item.is-uploading .ty-upload-list-item-uploading {
+    display: block;
+}
+
+.ty-upload-list-item:hover .ty-upload-list-item-uploading {
+    display: none;
+}
+
+/*====  头像模式进度图标  ====*/
+.ty-upload-picture-card .ty-upload-list-item:hover .ty-upload-list-item-uploading,
+.ty-upload-list-picture-card .ty-upload-list-item:hover .ty-upload-list-item-uploading {
+    display: block;
+}
+
+.ty-upload-picture-card .ty-upload-list-item.is-uploading .ty-upload-list-item-uploading,
+.ty-upload-list-picture-card .ty-upload-list-item.is-uploading .ty-upload-list-item-uploading {
+    top: 50%;
+    right: 50%;
+    font-size: 40px;
+    margin-top: -20px;
+    margin-right: -20px;
+}
+
+.ty-upload-picture-card .ty-upload-list-item:hover .ty-upload-list-item-uploading {
+    display: block;
+}
+
+/*================================================================*/
+/*=====================   上传组件相关样式 end   ===================*/
+/*================================================================*/
