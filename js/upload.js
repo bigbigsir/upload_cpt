@@ -260,7 +260,14 @@
             function iFrameLoadEvent() {
                 var document = this.contentWindow || this.contentDocument;
                 var responseText = document.document.body ? document.document.body.innerText : null;
-                if (responseText) requestSuccess(responseText);
+                if (responseText) {
+                    try {
+                        JSON.parse(responseText);
+                        requestSuccess(responseText);
+                    } catch (e) {
+                        requestError(null, responseText)
+                    }
+                }
             }
         }
 
@@ -776,9 +783,12 @@
         }
 
         // xhr请求失败事件函数
-        function requestError(e) {
-            elToClose(e.target.upload._id);
-            config.error && config.error(e.target);
+        function requestError(e, msg) {
+            var timer = setTimeout(function () {
+                elToClose(e && e.target.upload._id);
+                clearTimeout(timer);
+            }, 200);
+            config.error && config.error(e && e.target || msg);
         }
 
         // 请求成功后的回调函数
@@ -899,16 +909,29 @@
         // 预览元素上传错误删除元素
         function elToClose(xhrId) {
             xhrId = xhrId ? " " + xhrId : "";
-            var uploadList = document.getElementById("uploadList" + _id);
-            var uploadingList = uploadList.getElementsByClassName("is-uploading" + xhrId);
-            for (var i = uploadingList.length; i--;) {
-                uploadingList[i].className += config.align === "column" ? " ty-list-column-to" : " ty-list-row-to";
-                (function (li) {
-                    var timer = setTimeout(function () { // 删除文件项
-                        li && li.parentNode.removeChild(li);
-                        clearTimeout(timer);
-                    }, 500);
-                })(uploadingList[i]);
+            var uploadList;
+            if (config.uploadType === "avatar") {
+                uploadList = document.getElementById("uploadButton" + _id);
+                var timer = setTimeout(function () {
+                    uploadList.innerHTML = '<div class="ty-upload-icon-add-wrap">' +
+                        '    <i class="ty-upload-icon-add ' + config.iconClass.iconPlus + '"></i>' +
+                        '    <p class="ty-upload-text">上传图片</p>' +
+                        '</div>';
+                    clearTimeout(timer);
+                }, 500);
+            }
+            else {
+                uploadList = document.getElementById("uploadList" + _id);
+                var uploadingList = uploadList.getElementsByClassName("is-uploading" + xhrId);
+                for (var i = uploadingList.length; i--;) {
+                    uploadingList[i].className += config.align === "column" ? " ty-list-column-to" : " ty-list-row-to";
+                    (function (li) {
+                        var timer = setTimeout(function () { // 删除文件项
+                            li && li.parentNode.removeChild(li);
+                            clearTimeout(timer);
+                        }, 500);
+                    })(uploadingList[i]);
+                }
             }
             clearFileInput();
         }
@@ -939,7 +962,7 @@
                 }, 500);
             }
             else {
-                _submit()
+                _submit();
             }
 
             function _submit() {
@@ -1027,7 +1050,7 @@ window.onload = function () {
         uploadType: "button",   // button dragger picture avatar
         buttonText: "上传文件",
         multiple: false,
-        autoUpload: false,
+        autoUpload: true,
         disabled: true,
         data: {
             name: "upload1"
@@ -1052,7 +1075,7 @@ window.onload = function () {
         }
     });
     var upload2 = init({
-        // fileList: fileList,
+        fileList: fileList,
         tips: "upload2上传类型为拖拽上传，预览列表为纵列对齐，预览列表为文本预览。多选模式",
         url: "/upload",
         fileInputId: "file2",
@@ -1118,7 +1141,7 @@ window.onload = function () {
         }
     });
     var upload4 = init({
-        // fileList: fileList,
+        fileList: fileList,
         tips: "upload4上传类型为头像上传，只支持单张图片上传",
         url: "/upload",
         fileInputId: "file4",
