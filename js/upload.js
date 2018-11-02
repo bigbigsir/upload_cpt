@@ -1,4 +1,11 @@
+/**
+ * @description 上传组件
+ * @author      mojie
+ * @createDate  2018-11-02
+ */
 (function () {
+    "use strict";
+
     /**
      * @description  事件绑定，兼容各浏览器
      * @param target 事件触发对象
@@ -169,7 +176,7 @@
         return target;
     }
 
-// 拖拽文件时阻止浏览器打开文件默认行为
+    // 拖拽文件时阻止浏览器打开文件默认行为
     function stopOpenFile() {
         addEvent(document.body, "dragover", function (e) {
             e.stopPropagation && e.stopPropagation();
@@ -181,7 +188,7 @@
         });
     }
 
-// 获取浏览器信息
+    // 获取浏览器信息
     function getBrowserInfo() {
         var agent = navigator.userAgent.toLowerCase();
         var regStr_ie = /msie [\d.]+;/gi;
