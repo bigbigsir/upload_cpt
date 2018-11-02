@@ -961,7 +961,7 @@
                 }
                 ajax({
                     url: config.url,
-                    data: formData,
+                    data: formData
                 });
             }
 
