@@ -258,18 +258,9 @@
 
             // iFrame加载事件
             function iFrameLoadEvent() {
-                var responseText, json;
                 var document = this.contentWindow || this.contentDocument;
-                responseText = document.document.body ? document.document.body.innerText : null;
-                json = responseText && JSON.parse(responseText);
-                if (json) {
-                    if (config.success && typeof config.success === "function") {
-                        config.success(json, elToSuccess, elToClose)
-                    } else {
-                        elToSuccess();
-                    }
-                    innerSuccessCb();
-                }
+                var responseText = document.document.body ? document.document.body.innerText : null;
+                if (responseText) requestSuccess(responseText);
             }
         }
 
@@ -717,51 +708,11 @@
             } else {
                 xhr = new ActiveXObject('Microsoft.XMLHTTP');
             }
-            xhr.onreadystatechange = onReadyStateChange; // 状态变化
             xhr.upload.onloadstart = onLoadStart;        // 开始
             xhr.upload.onprogress = onProgress;          // 请求中···
-            xhr.onerror = onError;                       // 异常
+            xhr.onreadystatechange = onReadyStateChange; // 状态变化
             xhr.open("POST", ajaxConfig.url);
             xhr.send(ajaxConfig.data);
-
-            // xhr状态变化事件
-            function onReadyStateChange(e) {
-                if (xhr.readyState === 4 && xhr.status === 200) {
-                    var json = JSON.parse(xhr.responseText);
-                    if (ajaxConfig.success && typeof ajaxConfig.success === "function") {
-                        ajaxConfig.success(json, affirmSuccess, affirmError)
-                    } else {
-                        affirmSuccess();
-                    }
-                    innerSuccessCb();
-                }
-
-                // 确认上传成功调用函数
-                function affirmSuccess() {
-                    var xhrId = e.target.upload._id;
-                    clearInterval(e.target.upload._timer);
-                    if (!e.target.upload._isFast) {// 防止请求过快，进度条一闪而过
-                        var timer = setTimeout(function () {
-                            elToSuccess(xhrId);
-                            clearTimeout(timer)
-                        }, 400);
-                    } else {
-                        elToSuccess(xhrId);
-                    }
-                    delete e.target.upload._id;
-                    delete e.target.upload._timer;
-                    delete e.target.upload._isFast;
-                }
-
-                // 确认上传失败调用函数
-                function affirmError() {
-                    var xhrId = e.target.upload._id;
-                    elToClose(xhrId);
-                    delete e.target.upload._id;
-                    delete e.target.upload._timer;
-                    delete e.target.upload._isFast;
-                }
-            }
         }
 
         // xhr请求开始事件函数
@@ -769,7 +720,7 @@
             var xhrId = "xhr" + Math.random();
             e.target._id = xhrId;
             e.target._timer = setTimeout(function () {
-                e.target._isFast = true; // 记录上传完成时间是否小于200ms
+                e.target._isSlow = true; // 记录上传完成时间是否小于300ms
             }, 300);
             elToUploading(xhrId);// 不同上传批次的预览项，添加不同的标识
         }
@@ -801,28 +752,67 @@
             }
         }
 
-        // xhr请求失败事件函数
-        function onError(e) {
-            var xhrId = e.target.upload._id;
-            elToClose(xhrId);
-            config.error && config.error(e.target);
+        // xhr状态变化事件
+        function onReadyStateChange(e) {
+            if (xhr.readyState === 4) {
+                if (xhr.status === 200) {
+                    requestSuccess(e.target.responseText, e);
+                }
+                else {
+                    requestError(e)
+                }
+            }
         }
 
-        // 中断上传方法，闭包留住当次上传的xhr对象
+        // 中断请求方法，闭包留住当次上传的xhr对象，elToUploading函数中元素绑定改方法
         function cancelUpload(xhr) {
             return function () {
                 if (xhr) {
                     xhr.abort();
-                    elToClose(xhr.upload._id)
                 } else {
                     alert("您所使用的浏览器不支持取消上传！");
                 }
             };
         }
 
+        // xhr请求失败事件函数
+        function requestError(e) {
+            elToClose(e.target.upload._id);
+            config.error && config.error(e.target);
+        }
+
         // 请求成功后的回调函数
-        function innerSuccessCb() {
+        function requestSuccess(json, e) {
+            var xhrId = e && e.target.upload._id;
+            json = JSON.parse(json);
+            if (config.success && typeof config.success === "function") {
+                config.success(json, affirmSuccess, affirmError)
+            }
+            else {
+                affirmSuccess();
+            }
             clearFileInput();
+
+            // 确认上传成功调用函数
+            function affirmSuccess() {
+                if (xhrId && !e.target.upload._isSlow) {
+                    clearInterval(e.target.upload._timer);
+                    // 防止请求过快，上传进度条一闪而过
+                    var timer = setTimeout(function () {
+                        elToSuccess(xhrId);
+                        clearTimeout(timer);
+                    }, 400);
+                } else {
+                    elToSuccess(xhrId);
+                    xhrId && clearInterval(e.target.upload._timer);
+                }
+            }
+
+            // 确认上传失败调用函数
+            function affirmError() {
+                elToClose(xhrId);
+                xhrId && clearInterval(e.target.upload._timer);
+            }
         }
 
         // 预览元素变为上传中状态
@@ -915,7 +905,7 @@
                 uploadingList[i].className += config.align === "column" ? " ty-list-column-to" : " ty-list-row-to";
                 (function (li) {
                     var timer = setTimeout(function () { // 删除文件项
-                        li.parentNode.removeChild(li);
+                        li && li.parentNode.removeChild(li);
                         clearTimeout(timer);
                     }, 500);
                 })(uploadingList[i]);
@@ -972,8 +962,6 @@
                 ajax({
                     url: config.url,
                     data: formData,
-                    success: config.success,
-                    error: config.error
                 });
             }
 
@@ -1091,6 +1079,9 @@ window.onload = function () {
         success: function (data, toSuccess, toError) {
             console.log(data);
             toSuccess();
+        },
+        error: function (xhr) {
+            console.log(xhr);
         }
     });
     var upload3 = init({
