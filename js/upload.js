@@ -66,13 +66,12 @@
      */
     function limitImgMaxSize(file, maxSize) {
         var i, len;
-        var suffixIndex, suffix;
         var paths, img;
         maxSize = maxSize || 5;
         maxSize = maxSize * 1024 * 1024;
         if (file.files) {
             for (i = 0, len = file.files.length; i < len; i++) {
-                if (~file.files[i].type.indexOf("image/") && file.files[i].size > maxSize) {
+                if (isImg(file.files[i].name) && file.files[i].size > maxSize) {
                     return false;
                 }
             }
@@ -81,9 +80,7 @@
             paths = file.value.split(",");
             img = document.createElement("img");
             for (i = 0, len = paths.length; i < len; i++) {
-                suffixIndex = paths[i].lastIndexOf(".") + 1;
-                suffix = paths[i].substring(suffixIndex).toUpperCase();
-                if (/^(JPEG|GIF|JPG|PNG)$/.test(suffix)) {
+                if (isImg(paths[i])) {
                     img.src = paths[i];
                     if (img.fileSize > maxSize) return false;
                 }
@@ -98,26 +95,26 @@
      * @return boolean true/false
      */
     function isImg(file) {
-        var files;
-        var suffixIndex, suffix;
-        if (file.nodeType) {
+        var files, suffix, suffixIndex;
+        var reg = /^(JPEG|GIF|JPG|PNG|BMP)$/;
+        if (file.nodeType) { // 是否为input元素
             files = file.files || file.value.split(",");
         }
-        else {
-            files = [file];
+        else { // 单个或多个文件名、文件路径
+            files = Array.isArray(file) ? file : [file];
         }
         if (!files.length) return false;
         for (var i = files.length; i--;) {
             if (typeof files[i] === "object") {
-                return (files[i].type && ~files[i].type.indexOf("image/"));
+                suffix = files[i].name || "";
+                suffixIndex = suffix.lastIndexOf(".") + 1;
+                suffix = suffix.substring(suffixIndex).toUpperCase();
             }
             else if (typeof files[i] === "string") {
                 suffixIndex = files[i].lastIndexOf(".") + 1;
                 suffix = files[i].substring(suffixIndex).toUpperCase();
-                if (!/^(JPEG|GIF|JPG|PNG)$/.test(suffix)) {
-                    return false;
-                }
             }
+            if (!reg.test(suffix)) return false;
         }
         return true;
     }
@@ -188,34 +185,6 @@
         });
     }
 
-    // 获取浏览器信息
-    function getBrowserInfo() {
-        var agent = navigator.userAgent.toLowerCase();
-        var regStr_ie = /msie [\d.]+;/gi;
-        var regStr_ff = /firefox\/[\d.]+/gi;
-        var regStr_chrome = /chrome\/[\d.]+/gi;
-        var regStr_saf = /safari\/[\d.]+/gi;
-        // IE
-        if (agent.indexOf("msie") > 0) {
-            return agent.match(regStr_ie);
-        }
-
-        // FireFox
-        if (agent.indexOf("firefox") > 0) {
-            return agent.match(regStr_ff);
-        }
-
-        // Chrome
-        if (agent.indexOf("chrome") > 0) {
-            return agent.match(regStr_chrome);
-        }
-
-        // Safari
-        if (agent.indexOf("safari") > 0 && agent.indexOf("chrome") < 0) {
-            return agent.match(regStr_saf);
-        }
-    }
-
     /**
      * ============ 组件初始化函数  =============
      */
@@ -229,7 +198,7 @@
             autoUpload: true,
             align: "row",           // row column
             uploadType: "button",   // button dragger picture avatar
-            listType: "text",       // thumbnail text
+            listType: "text",       // thumbnail text picture-card
             buttonText: "上传附件",
             iconClass: {
                 "buttonIconUpload": "ty-icon-upload2",
@@ -263,10 +232,10 @@
                 if (responseText) {
                     try {
                         JSON.parse(responseText);
-                        requestSuccess(responseText);
                     } catch (e) {
-                        requestError(null, responseText)
+                        return requestError(null, responseText)
                     }
+                    requestSuccess(responseText);
                 }
             }
         }
@@ -301,7 +270,7 @@
             newFileInput.id = inputId;
             newFileInput.removeAttribute("multiple");
             if (config.uploadType === "picture" || config.uploadType === "avatar") {
-                newFileInput.accept = "image/gif,image/jpeg,image/jpg,image/png";
+                newFileInput.accept = "image/gif,image/jpeg,image/jpg,image/png,image/bmp";
             }
             if (config.multiple && config.uploadType !== "avatar") {
                 newFileInput.setAttribute("multiple", "multiple");
@@ -327,19 +296,20 @@
             insertAfter(upload, oldFileInput);
             addEvent(upload, "click", uploadButtonClickEvent);
             oldFileInput.parentNode.removeChild(oldFileInput);
-            if (config.disabled) disabled();
+            if (config.disabled) disabled();// 禁用上传按钮
             if (config.showFileList && config.uploadType !== "avatar") {
-                createUploadList();
-                if (config.fileList && config.fileList.length) {
-                    renderFileList(config.fileList, true);// 回显文件列表
+                createUploadList();// 预览列表容器
+            }
+            if (config.tips) createTips();// 提示文字
+            if (config.fileList) {
+                if (config.uploadType !== "avatar" && config.fileList.length) {
+                    renderFileList(config.fileList, true); // 回显文件列表
+                }
+                if (config.uploadType === "avatar" && Object.prototype.toString.call(config.fileList) === "[object Object]") {
+                    renderAvatar(config.fileList, upload);// 回显头像
                 }
             }
-            if (config.uploadType === "avatar" && config.fileList && config.fileList.length) {
-                renderAvatar(config.fileList[0], upload);// 回显头像
-            }
-            if (config.tips) {
-                insertAfter(createTips(), upload);
-            }
+
 
             // 创建拖拽上传
             function createDragger() {
@@ -382,10 +352,10 @@
                 var tips = document.createElement("div");
                 tips.className = "ty-upload-tips";
                 tips.innerText = config.tips;
-                return tips;
+                insertAfter(tips, upload);
             }
 
-            // 创建上传列表容器
+            // 创建预览列表容器
             function createUploadList() {
                 var uploadList = document.createElement("ul");
                 uploadList.id = "uploadList" + _id;
@@ -393,12 +363,17 @@
                 uploadList.className += config.align === "column" ?
                     " ty-upload-list-column" :
                     " ty-upload-list-row";
-                if (config.uploadType === "picture") {
+
+                if (config.listType === "picture-card") {
                     uploadList.className += " ty-upload-list-picture-card";
-                    insertBefore(uploadList, upload);
+                    if (config.uploadType === "picture") {
+                        insertBefore(uploadList, upload);
+                    } else {
+                        insertAfter(uploadList, upload);
+                    }
                 }
                 else if (config.listType === "thumbnail") {
-                    uploadList.className += " ty-upload-list-picture";
+                    uploadList.className += " ty-upload-list-thumbnail";
                     insertAfter(uploadList, upload);
                 }
                 else {
@@ -516,20 +491,17 @@
         }
 
         // 渲染上传文件列表
-        function renderFileList(file, isFileList) {
+        function renderFileList(fileObj, isLoadFile) {
             var previewItem;
             var i, len, j;
-            var isHtml5 = isFileList || !!file.files;
-            var files = (isFileList && file) || (file.files || file.value.split(","));
+            var isHtml5 = isLoadFile || !!fileObj.files;
+            var files = (isLoadFile && fileObj) || (fileObj.files || fileObj.value.split(","));
             var uploadList = document.getElementById("uploadList" + _id);
             var readyList = uploadList.getElementsByClassName("is-ready");
             var transform = config.align === "column" ? " ty-list-column-to" : " ty-list-row-to";
             for (j = readyList.length; j--;) {
-                // 每次改变上传的文件，清空当前未上传的文件预览项
+                // 清空当前未上传的文件预览项
                 readyList[j].parentNode.removeChild(readyList[j]);
-            }
-            if (!isFileList && config.uploadType === "picture" && !isImg(file)) {
-                return false;// 上传时非图片不生成预览
             }
             for (i = 0, len = files.length; i < len; i++) { // 文件预览渲染
                 previewItem = createPreviewItem(files[i]);
@@ -554,7 +526,7 @@
                 iconSuccess = document.createElement("i");      // 预览项-成功图标
                 iconClose = document.createElement("i");        // 预览项-关闭图标
                 iconFile = document.createElement("i");         // 预览项-文件图标
-                listItem.className = "ty-upload-list-item " + (isFileList ? "is-success" : "is-ready") + transform;
+                listItem.className = "ty-upload-list-item " + (isLoadFile ? "is-success" : "is-ready" + transform);
                 itemName.className = "ty-upload-list-item-name";
                 statusLabel.className = "ty-upload-list-item-status-label";
                 iconFile.className = "ty-upload-list-item-document " + config.iconClass.iconDocument;
@@ -562,8 +534,8 @@
                 iconClose.className = "ty-upload-list-item-close " + config.iconClass.iconClose;
                 textNode = isHtml5 ? file.name : getFileName(file);
                 textNode = document.createTextNode(textNode);
-                if (config.uploadType === "picture" || config.listType === "thumbnail") {// 照片墙/略缩图预览
-                    if (isFileList) { // 是否回显
+                if (config.listType === "picture-card" || config.listType === "thumbnail") {// 照片墙/略缩图预览
+                    if (isLoadFile) { // 是否回显
                         if (isImg(file.url)) {
                             itemThumbnai = createImg();
                             itemThumbnai.src = file.url;
@@ -572,6 +544,11 @@
                         }
                     }
                     else if (isImg(file)) {
+                        if (!isHtml5) {
+                            fileObj.select();
+                            fileObj.blur();
+                            file = document.selection.createRange().text;
+                        }
                         itemThumbnai = createImg(file);
                         itemThumbnai.className = "ty-upload-list-item-thumbnail";
                         listItem.appendChild(itemThumbnai);
@@ -586,7 +563,7 @@
                 statusLabel.appendChild(iconSuccess);
                 listItem.appendChild(itemName);
                 listItem.appendChild(statusLabel);
-                if (config.uploadType === "picture") {
+                if (config.listType === "picture-card") {
                     listItem.appendChild(createPictureActions());
                 }
                 else {
@@ -609,6 +586,15 @@
                     itemActions.appendChild(iconDelete);
                     return itemActions;
                 }
+            }
+        }
+
+        // 获取参数重新渲染上传文件列表，对外方法
+        function loadFiles(fileList) {
+            if (Array.isArray(fileList)) {
+                var uploadList = document.getElementById("uploadList" + _id);
+                uploadList.innerHTML = "";
+                renderFileList(fileList, true);
             }
         }
 
@@ -726,9 +712,7 @@
         function onLoadStart(e) {
             var xhrId = "xhr" + Math.random();
             e.target._id = xhrId;
-            e.target._timer = setTimeout(function () {
-                e.target._isSlow = true; // 记录上传完成时间是否小于300ms
-            }, 300);
+            e.target._startTime = new Date().getTime();
             elToUploading(xhrId);// 不同上传批次的预览项，添加不同的标识
         }
 
@@ -739,7 +723,7 @@
             var total = e.total;    // 附件总大小
             var loaded = e.loaded;  // 已经上传大小情况
             var per = Math.floor(100 * loaded / total);// 已经上传的百分比
-            var isPicture = config.uploadType === "picture" || config.uploadType === "avatar";
+            var isPicture = config.listType === "picture-card" || config.uploadType === "avatar";
             var text = document.getElementsByClassName("ty-progress-text " + xhrId);
             if (isPicture) {
                 progressView = document.getElementsByClassName("ty-progress-circle-path " + xhrId);
@@ -799,29 +783,27 @@
                 config.success(json, affirmSuccess, affirmError)
             }
             else {
-                affirmSuccess();
+                affirmSuccess(xhrId);
             }
             clearFileInput();
 
             // 确认上传成功调用函数
-            function affirmSuccess() {
-                if (xhrId && !e.target.upload._isSlow) {
-                    clearInterval(e.target.upload._timer);
+            function affirmSuccess(fileData) {
+                var timing = new Date().getTime() - (e && e.target.upload._startTime);
+                if (xhrId && timing < 400) {
                     // 防止请求过快，上传进度条一闪而过
                     var timer = setTimeout(function () {
-                        elToSuccess(xhrId);
+                        elToSuccess(xhrId, fileData);
                         clearTimeout(timer);
-                    }, 400);
+                    }, 400 - timing);
                 } else {
-                    elToSuccess(xhrId);
-                    xhrId && clearInterval(e.target.upload._timer);
+                    elToSuccess(xhrId, fileData);
                 }
             }
 
             // 确认上传失败调用函数
             function affirmError() {
                 elToClose(xhrId);
-                xhrId && clearInterval(e.target.upload._timer);
             }
         }
 
@@ -833,7 +815,7 @@
             if (config.uploadType === "avatar") {
                 uploadList = document.getElementById("uploadButton" + _id);
             }
-            var isPicture = config.uploadType === "picture" || config.uploadType === "avatar";
+            var isPicture = config.listType === "picture-card" || config.uploadType === "avatar";
             var readyList = uploadList.getElementsByClassName("is-ready");
             if (window.FormData) {
                 if (isPicture) {// 添加圆形进度条元素
@@ -877,32 +859,34 @@
             }
         }
 
-        // 预览元素变为上传成功状态
-        function elToSuccess(xhrId) {
+        // 预览元素变为上传成功状态,并将返回的数据绑定到元素身上
+        function elToSuccess(xhrId, fileData) {
             xhrId = xhrId ? " " + xhrId : "";
-            var i, progress, closeBtn;
+            var i, j, progress, closeBtn;
             var uploadList = document.getElementById("uploadList" + _id);
             if (config.uploadType === "avatar") {
                 uploadList = document.getElementById("uploadButton" + _id);
             }
-            var isPicture = config.uploadType === "picture" || config.uploadType === "avatar";
+            var isPicture = config.listType === "picture-card" || config.uploadType === "avatar";
             var uploadingList = uploadList.getElementsByClassName("is-uploading" + xhrId);
-            for (i = uploadingList.length; i--;) {
-                if (window.FormData) {
+            for (i = 0, j = 0; i < uploadingList.length; i++, j++) {
+                if (window.FormData) { // 进度条
                     progress = uploadingList[i].getElementsByClassName("ty-progress")[0];
                 }
-                else {
+                else { // IE9的加载图标
                     progress = uploadingList[i].getElementsByClassName("ty-upload-list-item-uploading")[0];
                 }
-                progress && uploadingList[i].removeChild(progress);
-                if (isPicture) {
+                if (isPicture) { // picture-card预览模式为删除图标
                     closeBtn = uploadingList[i].getElementsByClassName("ty-upload-list-item-delete")[0];
-                } else {
+                }
+                else { // thumbnail text预览模式为关闭图标
                     closeBtn = uploadingList[i].getElementsByClassName("ty-upload-list-item-close")[0];
                 }
-                closeBtn && closeBtn.parentNode.replaceChild(closeBtn.cloneNode(), closeBtn);
+                progress && uploadingList[i].removeChild(progress);
+                closeBtn && closeBtn.parentNode.replaceChild(closeBtn.cloneNode(), closeBtn);// 替换元素，去除元素身上绑定的事件
                 addEvent(uploadingList[i], "click", removeFileItem);
-                uploadingList[i].className = uploadingList[i].className.replace(" is-uploading" + xhrId, "") + " is-success"
+                uploadingList[i]._file = fileData && fileData[j];
+                uploadingList[i].className = uploadingList[i--].className.replace(" is-uploading" + xhrId, "") + " is-success"
             }
         }
 
@@ -938,12 +922,14 @@
 
         // 提交前验证是否符合规则
         function validateFile(fileInput) {
+            if (!window.FormData && !fileInput.value) return false;
+            if (window.FormData && (!fileInput._files || !fileInput._files.length)) return false;
             if (!limitImgMaxSize(fileInput)) {
                 alert("上传图片的大小不能超过5M！");
                 return false;
             }
             if ((config.uploadType === "avatar" || config.uploadType === "picture") && !isImg(fileInput)) {
-                alert("请上传图片格式文件！");
+                alert("请上传图片格式文件(JPEG|GIF|JPG|PNG|BMP)！");
                 return false;
             }
             return !config.beforeUpload || config.beforeUpload(fileInput);
@@ -971,27 +957,25 @@
                 } else {
                     formSubmit();
                 }
-            }
 
-            function formDataSubmit() {
-                var i, formData;
-                if (!fileInput._files || !fileInput._files.length) return;
-                fileInput.disabled = "disabled";
-                formData = new FormData(uploadForm);
-                fileInput.removeAttribute("disabled");
-                for (i = fileInput._files.length; i--;) {
-                    formData.append(fileInput.name, fileInput._files[i]);
+                function formDataSubmit() {
+                    var i, formData;
+                    fileInput.disabled = "disabled";
+                    formData = new FormData(uploadForm);
+                    fileInput.removeAttribute("disabled");
+                    for (i = fileInput._files.length; i--;) {
+                        formData.append(fileInput.name, fileInput._files[i]);
+                    }
+                    ajax({
+                        url: config.url,
+                        data: formData
+                    });
                 }
-                ajax({
-                    url: config.url,
-                    data: formData
-                });
-            }
 
-            function formSubmit() {
-                if (!fileInput.value) return;
-                elToUploading();
-                uploadForm.submit();
+                function formSubmit() {
+                    elToUploading();
+                    uploadForm.submit();
+                }
             }
         }
 
@@ -1009,6 +993,7 @@
             uploadId: _id,
             enabled: enabled, // 启用上传
             disabled: disabled, // 禁用上传
+            loadFiles: loadFiles,
             appendData: addOtherDataToForm, // 追加数据
             submit: config.autoUpload ? null : submit // 手动提交
         };
@@ -1045,13 +1030,13 @@ window.onload = function () {
         url: "/upload",
         fileInputId: "file1",
         showFileList: true,
-        listType: "thumbnail",  // thumbnail text
+        listType: "thumbnail",  // thumbnail text picture-card
         align: "row",           // row column
         uploadType: "button",   // button dragger picture avatar
         buttonText: "上传文件",
         multiple: false,
-        autoUpload: true,
-        disabled: true,
+        autoUpload: false,
+        disabled: false,
         data: {
             name: "upload1"
         },
@@ -1059,9 +1044,9 @@ window.onload = function () {
             console.log(data);
         },
         onChange: function (file) {
-            // console.log("onChange:", file);
+            console.log("onChange:", file.files);
         },
-        beforeUpload: function (imgElement) { // 上传文件之前的钩子，参数为当前文件input
+        beforeUpload: function (file) { // 上传文件之前的钩子，参数为当前文件input
             // console.log("beforeUpload:", file);
             return true; // return false 可以停止上传
         },
@@ -1080,7 +1065,7 @@ window.onload = function () {
         url: "/upload",
         fileInputId: "file2",
         showFileList: true,
-        listType: "text",      // thumbnail text
+        listType: "text",      // thumbnail text picture-card
         align: "column",       // row column
         uploadType: "dragger", // button dragger picture avatar
         multiple: true,
@@ -1101,7 +1086,18 @@ window.onload = function () {
         },
         success: function (data, toSuccess, toError) {
             console.log(data);
-            toSuccess();
+            if (data.success) {
+                var timer = setTimeout(function () {
+                    upload2.loadFiles(fileList.concat([{
+                        id: 3,
+                        name: "favicon.png",
+                        url: "img/favicon.png"
+                    }]));
+                    clearTimeout(timer);
+                }, 500);
+            } else {
+                toError();
+            }
         },
         error: function (xhr) {
             console.log(xhr);
@@ -1113,7 +1109,7 @@ window.onload = function () {
         url: "/upload",
         fileInputId: "file3",
         showFileList: true,
-        listType: "text",      // thumbnail text 照片墙上传无预览类型
+        listType: "picture-card",      // thumbnail text picture-card
         align: "column",       // row column
         uploadType: "picture", // button dragger picture avatar
         multiple: true,
@@ -1129,7 +1125,7 @@ window.onload = function () {
             console.log(src);
         },
         onChange: function (file) {
-            // console.log("onChange:", file);
+            console.log("onChange:", file.files);
         },
         beforeUpload: function (file) {
             // console.log("beforeUpload:", file);
@@ -1137,16 +1133,24 @@ window.onload = function () {
         },
         success: function (data, toSuccess, toError) {
             console.log(data);
-            toSuccess();
+            if (data.success) {
+                toSuccess(data.content[0].files);
+            } else {
+                toError();
+            }
         }
     });
     var upload4 = init({
-        fileList: fileList,
+        fileList: {
+            id: 1,
+            name: "img.jpg",
+            url: "img/img.jpg"
+        },
         tips: "upload4上传类型为头像上传，只支持单张图片上传",
         url: "/upload",
         fileInputId: "file4",
         showFileList: true,    // 头像上传无预览模式
-        listType: "text",      // thumbnail text 头像上传无预览类型
+        listType: "text",      // thumbnail text picture-card 头像上传无预览类型
         align: "column",       // row column     头像上传无排列方式
         uploadType: "avatar",  // button dragger picture avatar
         multiple: false,
