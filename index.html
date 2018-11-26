@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title>上传组件—demo</title>
+    <link rel="shortcut icon" href="img/favicon.png" type="image/x-icon"/>
+    <link rel="stylesheet" href="css/fonts/fonts.css">
+    <link rel="stylesheet" href="css/base.css">
+    <script src="js/upload.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            padding: 6px;
+            font-size: 14px;
+            font-weight: 400;
+            font-family: Helvetica Neue, Helvetica, PingFang SC, Hiragino Sans GB, Microsoft YaHei, SimSun, sans-serif;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        body:after {
+            content: "";
+            display: block;
+            clear: both;
+        }
+
+        .box {
+            min-height: 300px;
+            margin: 5px 0;
+        }
+
+        .button-box, .icon-font-box {
+            margin: 5px 0;
+        }
+
+        .icon-font-box i {
+            margin: 4px;
+            font-size: 20px;
+            color: #606266;
+        }
+    </style>
+</head>
+<body>
+<div class="icon-font-box">
+    <div class="ty-upload-tips">以下图标在上传组件中需要使用，不同项目，请自行在iconClass属性中写上对应字体图标的class名称</div>
+</div>
+<div class="button-box">
+    <button id="disabled" type="button" class="ty-upload ty-upload-button">
+        <span>禁用上传</span>
+    </button>
+    <button id="enabled" type="button" class="ty-upload ty-upload-button">
+        <span>启用上传</span>
+    </button>
+    <button id="manualUpload" type="button" class="ty-upload ty-upload-button">
+        <span>upload1手动上传</span>
+    </button>
+    <button id="appendData" type="button" class="ty-upload ty-upload-button">
+        <span>追加参数</span>
+    </button>
+</div>
+<div class="box">
+    <input id="file1" name="file1" type="file">
+</div>
+<div class="box">
+    <input id="file2" name="file2" type="file">
+</div>
+<div class="box">
+    <input id="file3" name="file3" type="file">
+</div>
+<div class="box">
+    <input id="file4" name="file4" type="file">
+</div>
+</body>
+</html>
