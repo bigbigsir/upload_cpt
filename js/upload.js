@@ -332,7 +332,7 @@
                 upload.className = "ty-upload ty-upload-picture-card";
                 upload.innerHTML = '<div class="ty-upload-icon-add-wrap">' +
                     '    <i class="ty-upload-icon-add ' + config.iconClass.iconPlus + '"></i>' +
-                    '    <p class="ty-upload-text">上传图片</p>' +
+                    '    <p class="ty-upload-text">' + config.buttonText + '</p>' +
                     '</div>';
                 return upload;
             }
@@ -399,10 +399,14 @@
                 }
             }
             if (config.uploadType === "avatar") {
-                renderAvatar(this);
+                if (isImg(this)) {
+                    renderAvatar(this);
+                }
             }
             else if (config.showFileList) {
-                renderFileList(this);
+                if (config.uploadType === "picture" && isImg(this) || config.uploadType !== "picture") {
+                    renderFileList(this);
+                }
             }
             if (config.autoUpload) submit();
         }
@@ -485,7 +489,7 @@
             } else {
                 uploadButton.innerHTML = '<div class="ty-upload-icon-add-wrap">' +
                     '    <i class="ty-upload-icon-add ' + config.iconClass.iconPlus + '"></i>' +
-                    '    <p class="ty-upload-text">上传图片</p>' +
+                    '    <p class="ty-upload-text">' + config.buttonText + '</p>' +
                     '</div>';
             }
         }
@@ -899,7 +903,7 @@
                 var timer = setTimeout(function () {
                     uploadList.innerHTML = '<div class="ty-upload-icon-add-wrap">' +
                         '    <i class="ty-upload-icon-add ' + config.iconClass.iconPlus + '"></i>' +
-                        '    <p class="ty-upload-text">上传图片</p>' +
+                        '    <p class="ty-upload-text">' + config.buttonText + '</p>' +
                         '</div>';
                     clearTimeout(timer);
                 }, 500);
