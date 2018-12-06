@@ -1052,7 +1052,7 @@ window.onload = function () {
         align: "row",           // row column
         uploadType: "button",   // button dragger picture avatar
         buttonText: "上传文件",
-        multiple: true,
+        multiple: false,
         autoUpload: false,
         disabled: false,
         data: {
