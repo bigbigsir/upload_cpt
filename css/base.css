@@ -42,6 +42,10 @@ body {
     opacity: 0;
 }
 
+.ty-upload-input {
+    display: none;
+}
+
 .ty-upload-tips {
     margin-top: 7px;
     font-size: 12px;
