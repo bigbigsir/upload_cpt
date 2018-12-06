@@ -43,7 +43,7 @@
 | enabled | /  | 启用上传组件。 |
 | disabled | /  | 禁用上传组件。 |
 | loadFiles | fileList  | 此方法在showFileList属性值为false的情况下无效。清空当前文件预览列表，加载fileList数据生成预览列表。 <br> `upload2.loadFiles([{id: 3, name: "favicon.png", url: "img/favicon.png"}]);` |
-| addOtherData | param  | 添加上传文件时需额外提交的数据，此方法将清除data属性中的值。<br>`upload2.appendData({name: "newUpload2"});` |
+| addOtherData | param  | 添加上传文件时需额外提交的数据，此方法将清除data属性中的值。<br>`upload2.addOtherData({name: "newUpload2"});` |
 
 ##### 使用示例
 
